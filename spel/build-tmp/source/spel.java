@@ -1,30 +1,112 @@
+import processing.core.*; 
+import processing.data.*; 
+import processing.event.*; 
+import processing.opengl.*; 
+
+import de.fhpotsdam.unfolding.*; 
+import de.fhpotsdam.unfolding.geo.*; 
+import de.fhpotsdam.unfolding.utils.*; 
+import de.fhpotsdam.unfolding.providers.*; 
+import de.fhpotsdam.unfolding.marker.*; 
+import de.fhpotsdam.unfolding.interactions.*; 
+import de.fhpotsdam.unfolding.events.*; 
+import com.onformative.leap.*; 
+import com.leapmotion.leap.*; 
+import com.leapmotion.leap.Gesture.State; 
+import com.leapmotion.leap.Gesture.Type; 
+import com.leapmotion.leap.KeyTapGesture; 
+import com.leapmotion.leap.ScreenTapGesture; 
+import com.leapmotion.leap.CircleGesture; 
+import org.geonames.*; 
+import java.net.*; 
+import codeanticode.glgraphics.*; 
+
+import org.apache.http.*; 
+import org.apache.http.impl.io.*; 
+import org.apache.http.client.params.*; 
+import org.apache.commons.codec.language.*; 
+import org.apache.http.impl.client.*; 
+import org.apache.http.annotation.*; 
+import org.apache.http.client.protocol.*; 
+import org.apache.http.util.*; 
+import org.apache.http.impl.auth.*; 
+import org.apache.http.client.methods.*; 
+import org.apache.http.protocol.*; 
+import org.apache.http.cookie.params.*; 
+import org.apache.http.entity.*; 
+import org.apache.http.auth.*; 
+import org.apache.commons.codec.*; 
+import org.apache.commons.codec.digest.*; 
+import org.apache.http.client.entity.*; 
+import org.apache.http.conn.socket.*; 
+import org.apache.http.conn.params.*; 
+import org.apache.http.cookie.*; 
+import org.apache.http.conn.routing.*; 
+import org.apache.commons.logging.*; 
+import org.apache.http.impl.conn.*; 
+import org.apache.http.impl.pool.*; 
+import org.apache.http.config.*; 
+import org.apache.http.impl.entity.*; 
+import org.apache.http.conn.util.*; 
+import org.apache.commons.logging.impl.*; 
+import org.apache.http.concurrent.*; 
+import org.apache.http.conn.*; 
+import org.apache.http.client.config.*; 
+import org.apache.commons.codec.net.*; 
+import org.apache.http.pool.*; 
+import org.apache.http.io.*; 
+import org.apache.http.client.*; 
+import org.apache.commons.codec.language.bm.*; 
+import org.apache.http.impl.*; 
+import org.apache.http.impl.conn.tsccm.*; 
+import org.apache.http.client.utils.*; 
+import org.apache.http.impl.cookie.*; 
+import org.apache.http.auth.params.*; 
+import org.apache.commons.codec.binary.*; 
+import org.apache.http.conn.ssl.*; 
+import org.apache.http.params.*; 
+import org.apache.http.message.*; 
+import org.apache.http.impl.execchain.*; 
+import org.apache.http.conn.scheme.*; 
+
+import java.util.HashMap; 
+import java.util.ArrayList; 
+import java.io.File; 
+import java.io.BufferedReader; 
+import java.io.PrintWriter; 
+import java.io.InputStream; 
+import java.io.OutputStream; 
+import java.io.IOException; 
+
+public class spel extends PApplet {
+
 
 //IMPORT LIBRARIES
 
 //unfolding
-import de.fhpotsdam.unfolding.*;
-import de.fhpotsdam.unfolding.geo.*;
-import de.fhpotsdam.unfolding.utils.*;
-import de.fhpotsdam.unfolding.providers.*;
-import de.fhpotsdam.unfolding.marker.*;
-import de.fhpotsdam.unfolding.interactions.*;
-import de.fhpotsdam.unfolding.events.*;
+
+
+
+
+
+
+
 
 //leapmotion
-import com.onformative.leap.*;
-import com.leapmotion.leap.*;
-import com.leapmotion.leap.Gesture.State; 
-import com.leapmotion.leap.Gesture.Type;
-import com.leapmotion.leap.KeyTapGesture;
-import com.leapmotion.leap.ScreenTapGesture;
-import com.leapmotion.leap.CircleGesture;   
+
+
+ 
+
+
+
+   
 
 //geonames
-import org.geonames.*;
+
 
 //andere
-import java.net.*;
-import codeanticode.glgraphics.*;
+
+
 
 //GLOBALE VARIABELEN
 
@@ -55,7 +137,7 @@ float yfinger;
 
 PVector handPos;
 
-void setup() {
+public void setup() {
 	//Venster aanmaken
 	size(800,600);
 	smooth();
@@ -74,7 +156,7 @@ void setup() {
 	org.apache.log4j.BasicConfigurator.configure();
 }
 
-void draw() {
+public void draw() {
 	
 	myMap.draw();
 	
@@ -114,7 +196,7 @@ public void checkPanning(PVector handPosition){
     myMap.panTo(panLocation);
 }
 
-void addMarkers(ArrayList<MarkerInfo> lst){
+public void addMarkers(ArrayList<MarkerInfo> lst){
 	try {
 		//alle markers overlopen in ArrayList
 		for (MarkerInfo markInfo : lst) {
@@ -137,13 +219,13 @@ void addMarkers(ArrayList<MarkerInfo> lst){
 	
 }
 //Willekeurig nieuw land kiezen
-void RandomCountry()
+public void RandomCountry()
 {
 
 }
 
 //Afstand berekenen tussen aangeduide plek en random land
-void CalculateDistance()
+public void CalculateDistance()
 {
 
 }
@@ -198,7 +280,7 @@ public void setupLeapMotion(){
   leap.enableGesture(Type.TYPE_KEY_TAP);
 }
 
-void mouseClicked() {
+public void mouseClicked() {
 	//locatie ophalen adhv x en y van muis
  	Location clickLocation = myMap.getLocation(mouseX, mouseY);
  	//marker aanmaken (die later op de map zal worden getoond)
@@ -362,3 +444,34 @@ public void circleGestureRecognized(CircleGesture gesture, String clockwiseness)
 public void stop() {
   leap.stop();
 }	
+//deze klasse is nodig omdat we per click een SimplePointMarker
+//en een label (bv. landnaam) willen bijhouden
+class MarkerInfo{
+	private String info;
+	private SimplePointMarker marker;
+
+	//Constructor
+	public MarkerInfo(SimplePointMarker marker, String info){
+		this.marker = marker;
+		this.info = info;
+	}
+
+	//getters
+	public SimplePointMarker marker() {
+		return this.marker;
+	}
+
+	public String info() {
+		return this.info;
+	}
+
+}
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "spel" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
+    }
+  }
+}
