@@ -272,6 +272,7 @@ public void draw() {
 
 		case 2 : //Startscherm van de server, blijft hier op hangen tot hij en client vind.
 				//Afdrukken IP adres 
+				background(0);
 				textFont(createFont("HelveticaNeue",15));
 				fill(0xff776F5F);
 				text("Wachtend op client om te connecten.\nMijn IP adres:" + myIP, width/2 - 100, height / 2 -50);
@@ -590,10 +591,13 @@ public void speelSoloButton()
 //Opvangen server button
 public void speelServerButton()
 {
+	println("In de method: speelServerButton");
 	removeStartButtons();//Controls van het eerste scherm verwijderen.
-
+	makeGoHomeButton();
+	println("startbuttons verwijderd");
 	myServer = new Server(this, portNumber);
-		//IP adress opzoeken
+	println("myServer aangemaakt");
+	//IP adress opzoeken
 	try
 	{
 		inet = InetAddress.getLocalHost();
@@ -601,6 +605,7 @@ public void speelServerButton()
 	}
 	catch(Exception ex)
 	{
+		println("Niet gelukt om IP adres op te halen");
 		ex.printStackTrace();
 		myIP = "Kon IP adres niet ophalen";
 	}
