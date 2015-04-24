@@ -1,4 +1,3 @@
-
 //IMPORT LIBRARIES
 
 //unfolding
@@ -21,6 +20,15 @@ import com.leapmotion.leap.CircleGesture;
 
 //geonames
 import org.geonames.*;
+
+//Controls (textboxen, buttons,...)
+import controlP5.*;
+
+//Om het IP adres te kunnen opvragen
+import java.net.InetAddress;
+
+//Sockets (server - client)
+import processing.net.*;
 
 //andere
 import java.net.*;
@@ -63,6 +71,20 @@ int hue = 0;	//rood = 0 of 65280 / groen = 25500 tot 36210 / blauw = 46920
 int brightness = 0;	//van 0 tot 255
 int saturation = 0;
 
+//WEBSOCKETS (hier worden client en server aangemaakt omdat we nog nie weten wie wat gaat zijn.)
+Server myServer; //Voor de server
+Client myClient; //Voor de client
+final int portNumber = 5204;//Poort nummer waar je gaat op opstarten.
+
+//CONTROLS
+ControlP5 cp5;
+
+//IP ADRES VINDEN
+InetAddress inet;
+String myIP;
+
+
+
 //LOGICA
 Location searchLoc = new Location(50.835925, 4.350409);	//locatie die gezocht moet worden
 SimplePointMarker searchMark = new SimplePointMarker(searchLoc);
@@ -71,7 +93,7 @@ Location cursorLoc;	//locatie van de cursor
 int distance;	//afstand tussen gezochte locatie en locatie van "cursor"
 
 //GAME
-int gameState = 1; //0 = INTRO - 1 = STARTED - 3 = STOPPED
+int gameState = 0; //0 = INTRO - 1 = STARTED - 3 = STOPPED
 
 void setup() {
 	//Venster aanmaken
@@ -93,13 +115,24 @@ void setup() {
 
 	//logger: will setup basic logging to the console
 	org.apache.log4j.BasicConfigurator.configure();
+
+	//Controls
+	cp5 = new ControlP5(this);
+
+	//Startscherm controls aanmaken (gamestate = 0)
+	makeStartButtons();
+
+	//Mag waarschijnlijk al weg.
+	println("DEVELOPER COMMENTAAR:\nDruk op s om solo te starten,\n Druk a om als server te kunnen starten,\n Druk z om als client te kunnen starten.");
+
 }
 
 void draw() {
 
 	switch (gameState) {
-		case 0 : //INTRO
+		case 0 : //INTRO (kiezen van spelmodus, en van hoe )
 			background(0);
+			
 		break;	
 
 		case 1 : //STARTED
@@ -147,16 +180,29 @@ void draw() {
 			    } catch (Exception e) {
 			    	println(">> DISTANCE: " + e);
 			    }
-					break;	
-				}
+		break;					
+
+		case 2 : //Startscherm van de server, blijft hier op hangen tot hij en client vind.
+				//Afdrukken IP adres 
+				textFont(createFont("HelveticaNeue",15));
+				fill(#776F5F);
+				text("Wachtend op client om te connecten.\nMijn IP adres:" + myIP, width/2 - 100, height / 2 -50);
+		break;
+	}
 	
 
 }
 
 void keyPressed() {
-  if (key == 's') {
-    gameState = 1;
+  if (key == 's' || key == 'S') {//Wisselen van intro naar spel
+    speelSoloButton();
 	}
+  if(key == 'a' || key == 'A' && gameState == 0) {//Opstarten als server
+  	speelServerButton();
+  }
+  if(key == 'z' || key == 'Z' && gameState == 0) {//Opstarten als client
+  	speelClientButton();
+  }
  }
 
 public void hueTest(){
@@ -445,10 +491,93 @@ public void circleGestureRecognized(CircleGesture gesture, String clockwiseness)
   }
 }
 
+//Opvangen speel alleen button
+public void speelSoloButton()
+{
+	removeStartButtons();//Startscherm weghalen
+	makeGoHomeButton();//Terug naar home button maken.
+	gameState = 1;
+}
+
+//Opvangen server button
+public void speelServerButton()
+{
+	removeStartButtons();//Controls van het eerste scherm verwijderen.
+
+	myServer = new Server(this, portNumber);
+		//IP adress opzoeken
+	try
+	{
+		inet = InetAddress.getLocalHost();
+		myIP = inet.getHostAddress();
+	}
+	catch(Exception ex)
+	{
+		ex.printStackTrace();
+		myIP = "Kon IP adres niet ophalen";
+	}
+
+	gameState = 2;
+}
+
+//Opvangen client button
+public void speelClientButton()
+{
+	//tekstvak (IP) leeghalen
+	String serverIP = cp5.get(Textfield.class, "speelClientTextfield").getText();
+
+	//myClient aanmaken
+	myClient = new Client(this, serverIP, portNumber);
+
+	//Verbinden met client?
+
+}
+
+//Opvangen GoHome button (ga terug naar startscherm)
+public void homeButton()
+{
+	gameState = 0;
+	makeStartButtons();
+	removeGoHomeButton();
+}
+
+//Maak buttons en tekstvakken aan voor het startscherm gamestate = 0
+public void makeStartButtons()
+{
+	cp5.addButton("speelSoloButton", 1, width/2 - 50, height/2 - 90, 100,30).setCaptionLabel("Speel Alleen");//Button om alleen te spelen
+	cp5.addButton("speelServerButton", 1, width/2 - 50, height/2 - 30, 100,30).setCaptionLabel("Speel Server");//Button om als server te starten
+	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in");//Tekstvak waar je het IP van de server moet ingeven
+	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
+}
+
+//Verwijder buttons en tekstvakken van het startscherm
+public void removeStartButtons()
+{
+	cp5.getController("speelSoloButton").remove();
+	cp5.getController("speelServerButton").remove();
+	cp5.getController("speelClientTextfield").remove();
+	cp5.getController("speelClientButton").remove();
+}
+
+//Button om terug naar startscherm te gaan aanmaken
+public void makeGoHomeButton() 
+{
+	cp5.addButton("homeButton", 1, 10,10,60,30);
+}
+
+//Button om terug naar startscherm te gaan verwijderen
+public void removeGoHomeButton() 
+{
+	cp5.getController("homeButton").remove();
+}
+
+
 
 
 public void stop() {
   leap.stop();
   httpClient.getConnectionManager().shutdown();
   super.stop();
+  //Server en client afsluiten?
+
 }	
