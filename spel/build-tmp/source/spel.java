@@ -619,10 +619,9 @@ public void speelClientButton()
 	//tekstvak (IP) leeghalen
 	String serverIP = cp5.get(Textfield.class, "speelClientTextfield").getText();
 
-	//myClient aanmaken
+	//Verbinden met client
 	myClient = new Client(this, serverIP, portNumber);
 
-	//Verbinden met client?
 
 }
 
@@ -674,6 +673,13 @@ public void stop() {
   //Server en client afsluiten?
 
 }	
+
+
+public void serverEvent(Server someServer, Client someClient)
+{
+	//Klant is verbonden
+	println("Klant is verbonden");
+}
 //deze klasse is nodig omdat we per click een SimplePointMarker
 //en een label (bv. landnaam) willen bijhouden
 class MarkerInfo{
