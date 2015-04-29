@@ -123,7 +123,7 @@ void setup() {
 	makeStartButtons();
 
 	//Mag waarschijnlijk al weg.
-	println("DEVELOPER COMMENTAAR:\nDruk op s om solo te starten,\n Druk a om als server te kunnen starten,\n Druk z om als client te kunnen starten.");
+	println("DEVELOPER COMMENTAAR:\nDruk op s om solo te starten,\n Druk a om als server te starten,\n Druk z om als client te starten.");
 
 }
 

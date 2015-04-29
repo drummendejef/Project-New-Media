@@ -211,7 +211,7 @@ public void setup() {
 	makeStartButtons();
 
 	//Mag waarschijnlijk al weg.
-	println("DEVELOPER COMMENTAAR:\nDruk op s om solo te starten,\n Druk a om als server te kunnen starten,\n Druk z om als client te kunnen starten.");
+	println("DEVELOPER COMMENTAAR:\nDruk op s om solo te starten,\n Druk a om als server te starten,\n Druk z om als client te starten.");
 
 }
 
@@ -583,7 +583,7 @@ public void circleGestureRecognized(CircleGesture gesture, String clockwiseness)
 //Opvangen speel alleen button
 public void speelSoloButton()
 {
-	removeStartButtons();//Startscherm weghalen
+	//removeStartButtons();//Startscherm weghalen
 	makeGoHomeButton();//Terug naar home button maken.
 	gameState = 1;
 }
