@@ -132,6 +132,12 @@ void draw() {
 	switch (gameState) {
 		case 0 : //INTRO (kiezen van spelmodus, en van hoe )
 			background(0);
+			 for (Hand hand : leap.getHandList()) {
+			        handPos = leap.getPosition(hand);
+			        ellipse(handPos.x, handPos.y, 20, 20);
+			        fill(255);
+			        ellipse(handPos.x, handPos.y, 20, 20);
+			    }
 			
 		break;	
 
