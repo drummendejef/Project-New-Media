@@ -75,6 +75,8 @@ int saturation = 0;
 Server myServer; //Voor de server
 Client myClient; //Voor de client
 final int portNumber = 5204;//Poort nummer waar je gaat op opstarten.
+int dataIn; //Data die de server doorstuurt naar de client.
+byte stopReadTeken = 0;
 
 //CONTROLS
 ControlP5 cp5;
@@ -82,6 +84,12 @@ ControlP5 cp5;
 //IP ADRES VINDEN
 InetAddress inet;
 String myIP;
+
+//COUNTDOWN
+int startCountDownWaarde = 3;//Visueel zie je het dan starten bij 3.
+int timeCountDownGestart;
+int teller; 
+
 
 
 
@@ -92,8 +100,10 @@ SimplePointMarker searchMark = new SimplePointMarker(searchLoc);
 Location cursorLoc;	//locatie van de cursor
 int distance;	//afstand tussen gezochte locatie en locatie van "cursor"
 
+boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden.
+
 //GAME
-int gameState = 0; //0 = INTRO - 1 = STARTED - 3 = STOPPED
+int gameState = 0; //0 = INTRO - 1 = STARTED - 2 = SERVER wachtscherm - 3 = AFTELSCHERM
 
 void setup() {
 	//Venster aanmaken
@@ -194,6 +204,25 @@ void draw() {
 				textFont(createFont("HelveticaNeue",15));
 				fill(#776F5F);
 				text("Wachtend op client om te connecten.\nMijn IP adres:" + myIP, width/2 - 100, height / 2 -50);
+		break;
+
+		case 3 : //Aftelscherm, de client is geconnecteerd met de server, aftelscherm om spelers gewaar te maken dat het spel gaat starten.
+
+				background(0);
+				textFont(createFont("HelveticaNeue",50));
+				fill(#FF5555);
+				teller = startCountDownWaarde - int((millis() - timeCountDownGestart)/1000);
+				println("teller: "+teller);
+				println("millis()/1000: "+millis()/1000);
+				text(teller, width/2, height/2);
+				if(teller <= 0)//Als de teller is afgelopen, spel beginnen.
+				{
+					gameState = 1;
+				}
+
+
+
+				textFont(createFont("HelveticaNeue",15));//door Joren: Dit moet hier omdat in multiplayer de tekst anders heel erg groot is (het font van de teller)
 		break;
 	}
 	
@@ -503,6 +532,7 @@ public void speelSoloButton()
 {
 	removeStartButtons();//Startscherm weghalen
 	makeGoHomeButton();//Terug naar home button maken.
+	isMultiplayer = false;//Solo spel.
 	gameState = 1;
 }
 
@@ -512,10 +542,9 @@ public void speelServerButton()
 	println("In de method: speelServerButton");
 	removeStartButtons();//Controls van het eerste scherm verwijderen.
 	makeGoHomeButton();
-	println("startbuttons verwijderd");
 	myServer = new Server(this, portNumber);
-	println("myServer aangemaakt");
 	//IP adress opzoeken
+	println("IP adress aan het opzoeken");
 	try
 	{
 		inet = InetAddress.getLocalHost();
@@ -556,7 +585,7 @@ public void makeStartButtons()
 {
 	cp5.addButton("speelSoloButton", 1, width/2 - 50, height/2 - 90, 100,30).setCaptionLabel("Speel Alleen");//Button om alleen te spelen
 	cp5.addButton("speelServerButton", 1, width/2 - 50, height/2 - 30, 100,30).setCaptionLabel("Speel Server");//Button om als server te starten
-	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in");//Tekstvak waar je het IP van de server moet ingeven
+	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true);;//Tekstvak waar je het IP van de server moet ingeven
 	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
 }
 
@@ -589,12 +618,53 @@ public void stop() {
   httpClient.getConnectionManager().shutdown();
   super.stop();
   //Server en client afsluiten?
+  myServer.stop();
+  myClient.stop();
 
 }	
 
-
+//Wordt aangeroepen wanneer er een client connecteert.
 public void serverEvent(Server someServer, Client someClient)
 {
 	//Klant is verbonden
 	println("Klant is verbonden");
+
+	//Is een multispeler spel
+	isMultiplayer = true; //(benodigd om multiplayer logica te laten werken.)
+
+	//TODO:
+	//Random land kiezen
+	//Random land doorsturen naar speler.
+		
+
+
+	//Zeggen tegen client dat hij mag starten met countdown
+	myServer.write(1);
+
+	//Countdown starten
+	timeCountDownGestart = millis();
+	gameState = 3;
+}
+
+//Wordt aangeroepen als de server iets stuurt.
+public void clientEvent(Client someClient)
+{
+	print("Server zegt: ");
+	if(myClient.available() > 0)//Kijken of de server wel iets stuurt.
+	{
+		println("myClient.available(): "+myClient.available());
+		dataIn = myClient.read();
+	}
+
+	switch (dataIn) {
+		case 1 :
+			println("dataIn: "+dataIn);
+			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
+			removeStartButtons();
+			makeGoHomeButton();
+			gameState = 3;
+		break;
+		
+	}
+
 }
