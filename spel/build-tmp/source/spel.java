@@ -169,6 +169,7 @@ byte stopReadTeken = 0;
 //CONTROLS
 ControlP5 cp5;
 
+
 //IP ADRES VINDEN
 InetAddress inet;
 String myIP;
@@ -182,13 +183,22 @@ int teller;
 
 
 //LOGICA
-Location searchLoc = new Location(50.835925f, 4.350409f);	//locatie die gezocht moet worden
-SimplePointMarker searchMark = new SimplePointMarker(searchLoc);
+//Location searchLoc = new Location(50.835925, 4.350409);	//locatie die gezocht moet worden
+//SimplePointMarker searchMark = new SimplePointMarker(searchLoc);
+
+Location searchLoc;	//locatie die gezocht moet worden
+SimplePointMarker searchMark;
+
 
 Location cursorLoc;	//locatie van de cursor
 int distance;	//afstand tussen gezochte locatie en locatie van "cursor"
 
 boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden.
+
+
+ArrayList<String> arrLanden = new ArrayList();
+String teZoekenLand;
+
 
 //GAME
 int gameState = 0; //0 = INTRO - 1 = STARTED - 2 = SERVER wachtscherm - 3 = AFTELSCHERM
@@ -223,6 +233,12 @@ public void setup() {
 	//Mag waarschijnlijk al weg.
 	println("DEVELOPER COMMENTAAR:\nDruk op s om solo te starten,\n Druk a om als server te starten,\n Druk z om als client te starten.");
 
+	//landen inladen
+	arrLanden = GetCountries();
+
+	teZoekenLand = getRandomLand(arrLanden);
+	zoekLatEnLong(teZoekenLand);
+
 }
 
 public void draw() {
@@ -236,12 +252,19 @@ public void draw() {
 			        fill(255);
 			        ellipse(handPos.x, handPos.y, 20, 20);
 			    }
+
+			 //println(">rndLand: " + getRandomLand(arrLanden));
+			
 			
 		break;	
 
 		case 1 : //STARTED
+
 				myMap.draw();
-	
+
+
+        		myMap.addMarker(searchMark);
+				
 				//get the Location of the map at the current mouse position, and show its latitude and longitude as black text.
 				//Location location = myMap.getLocation(mouseX, mouseY);
 				//text(location.getLat() + ", " + location.getLon(), mouseX, mouseY);
@@ -362,9 +385,6 @@ public void checkDistance(){
 }
 
 
-
-
-
 public void checkPanning(PVector handPosition){
 
     Location panLocation = myMap.getLocation(handPosition.x,handPosition.y);
@@ -394,25 +414,12 @@ public void addMarkers(ArrayList<MarkerInfo> lst){
 	}
 	
 }
-//Willekeurig nieuw land kiezen
-public void RandomCountry()
-{
 
-}
-
-//Afstand berekenen tussen aangeduide plek en random land
-public void CalculateDistance()
-{
-
-}
 
 //TODO: 
 
 //Tekstvakje dat naam van een land weergeeft
 
-//Google maps weergeven
-
-//Afstand berekenen van random land en philips hueu daarmee aansturen
 
 //Uitzoeken hoe 2 spelers te kunnen connecteren.
 // https://processing.org/reference/libraries/net/Server.html
@@ -441,7 +448,7 @@ public void setupMyMap(){
   									//range: 0 is max. uitgezoomd, 18 (of meer indien mogelijk) is max. uitgezoomd
 
 
-  	myMap.addMarker(searchMark);								
+  	//myMap.addMarker(searchMark);								
 }
 
 public void setupGeoNamesWebService(){
@@ -468,6 +475,83 @@ public void mouseClicked() {
  	//println("lstMarkers: "+lstMarkers);
 }
 
+public ArrayList<String> GetCountries()
+{
+	//webservice: http://www.groupkt.com/post/c9b0ccb9/restful-webservices-to-get-and-search-countries.htm
+
+	try {
+		URI uri = new URIBuilder()
+			.setScheme("http")
+			.setHost("services.groupkt.com")
+			.setPath("/country/get/all")
+			.build();
+
+		//webservice geeft json terug
+		JSONObject jsonLanden = loadJSONObject("" + uri);
+		//println("jsonLanden: "+jsonLanden);
+
+		JSONObject restResponse = jsonLanden.getJSONObject("RestResponse");
+		//println("restResponse: "+restResponse);
+
+		JSONArray result = restResponse.getJSONArray("result");
+		//println("result: "+result);
+
+		for (int i = 0; i < result.size(); ++i) {
+			JSONObject land = result.getJSONObject(i);
+			String sLand = land.getString("name");
+			//println("sLand: "+sLand);
+
+			arrLanden.add(sLand);
+
+		}
+		//println("arrLanden: "+arrLanden);
+
+	} catch (Exception e) {
+		println("> GetCountries error: "+e);
+	}
+	return arrLanden;
+}
+
+public String getRandomLand(ArrayList<String> arrLanden){
+	int index = PApplet.parseInt(random(arrLanden.size()));
+	return arrLanden.get(index);
+}
+
+public void zoekLatEnLong(String sLand){
+	float lat;
+	float lon;
+
+	//http://api.geonames.org/search?username=frederic.gryspeerdt&name_equals=belgium&lang=nl&type=json
+	try {
+		//try - catch is verplicht als je met URI werkt
+		URI uri = new URIBuilder()
+        .setScheme("http")
+        .setHost("api.geonames.org")
+        .setPath("/search")
+        .setParameter("name_equals", sLand)
+        .setParameter("lang", "nl")
+        .setParameter("type", "json")
+        .setParameter("username", username)
+        .build();
+
+        JSONObject search = loadJSONObject(""+uri);
+        JSONArray geonames = search.getJSONArray("geonames");
+
+        for (int i = 0; i < 1; ++i) {
+        	JSONObject countryInfo = geonames.getJSONObject(i);
+
+        	lat = Float.parseFloat(countryInfo.getString("lat"));
+        	lon =  Float.parseFloat(countryInfo.getString("lng"));
+
+        	searchLoc = new Location(lat,lon);
+        	println("searchLoc: "+searchLoc);
+        	searchMark = new SimplePointMarker(searchLoc);
+
+        }
+    } catch (Exception e) {
+        	println("zoekLatLon exception: "+e);
+    }
+}
 
 public void zoekNaamLocatie(Location clickLocation) {
 	//obv de clickLocatie (gebruiker heeft ergens op de kaart geklikt), de naam van het land (en andere info)
@@ -494,7 +578,7 @@ public void zoekNaamLocatie(Location clickLocation) {
 
 		//webservice heeft json terug
 		json = loadJSONObject(""+uri);
-  		//println("> json: "+json);
+  		println("> json: "+json);
 
   		//Get the element that holds the information
   		JSONArray values = json.getJSONArray("geonames");
@@ -721,6 +805,11 @@ public void serverEvent(Server someServer, Client someClient)
 	isMultiplayer = true; //(benodigd om multiplayer logica te laten werken.)
 
 	//TODO:
+	//Random land kiezen
+	//Random land doorsturen naar speler.
+		
+
+
 	//Zeggen tegen client dat hij mag starten met countdown
 	myServer.write(1);
 
@@ -744,7 +833,7 @@ public void clientEvent(Client someClient)
 			println("dataIn: "+dataIn);
 			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
 			removeStartButtons();
-			
+			makeGoHomeButton();
 			gameState = 3;
 		break;
 		
