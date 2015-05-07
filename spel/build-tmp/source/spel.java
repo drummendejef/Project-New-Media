@@ -187,7 +187,7 @@ int teller;
 //SimplePointMarker searchMark = new SimplePointMarker(searchLoc);
 
 Location searchLoc;	//locatie die gezocht moet worden
-SimplePointMarker searchMark;
+SimplePointMarker searchMark; //onzichtbare marker op de kaart (nodig om afstand tot zoeklocatie te weten)
 
 
 Location cursorLoc;	//locatie van de cursor
@@ -198,6 +198,9 @@ boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of nie
 
 ArrayList<String> arrLanden = new ArrayList();
 String teZoekenLand;
+ArrayList<SimplePointMarker> arrMarkersSpeler1 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
+ArrayList<SimplePointMarker> arrMarkersSpeler2 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
+
 
 
 //GAME
@@ -262,7 +265,7 @@ public void draw() {
 
 				myMap.draw();
 
-
+				//toevoegen te zoeken land
         		myMap.addMarker(searchMark);
 				
 				//get the Location of the map at the current mouse position, and show its latitude and longitude as black text.
@@ -272,13 +275,15 @@ public void draw() {
 				//weergeven van alle markers (plaatsen waar geklikt is)
 				addMarkers(lstMarkers);
 
+				//fingerpositie ophalen --> gebruikt om in/uitzoomen te regelen
 				try {
 			      //text(mouseX + ", " + mouseY,mouseX,mouseY);
 			      fingerPos = leap.getTip(leap.getFinger(0));    
 			    } catch (Exception e) {
 			      println("> fingerposition: "+e);
 			    }
-			    
+
+			    //handpositie ophalen --> gebruikt om over kaart te bewegen
 			    try {
 			       for (Hand hand : leap.getHandList()) {
 			        handPos = leap.getPosition(hand);
@@ -294,12 +299,13 @@ public void draw() {
 			    }
 
 
-			    //aanvulling
+			    //afstand berekenen tss handpositie speler en te zoeken land
+			    //OPGEPAST: - mouseX, mouseY moet nog aangepast worden naar handpositie
+			    //			- hueTest() uit commentaar halen
 			    try {
 			    	cursorLoc = myMap.getLocation(mouseX, mouseY);
 			    	distance = (int)searchLoc.getDistance(cursorLoc);
-			    	println(">> DISTANCE: " + distance);
-			    	//distanceToColorConverter();
+			    	//println(">> DISTANCE: " + distance);
 
 			    	checkDistance();
 			    	//hueTest();
@@ -330,8 +336,6 @@ public void draw() {
 				{
 					gameState = 1;
 				}
-
-
 
 				textFont(createFont("HelveticaNeue",15));//door Joren: Dit moet hier omdat in multiplayer de tekst anders heel erg groot is (het font van de teller)
 		break;
@@ -376,9 +380,9 @@ public void checkDistance(){
 	//max saturation = 255
 	//max distance = +-20.000
 
-	hue = (int)map(distance, 0, 20000, 0, 46920); // hoe dichter bij gezochte locatie, hoe rooder 
+	hue = (int)map(distance, 0, 20000, 0, 46920); // hoe dichter bij gezochte locatie, hoe roder 
 	//println("hue: "+hue);
-	brightness = (int)map(distance, 0, 20000, 170, 0); //hoe dicht bij gezochte locatie, hoe meer helder
+	brightness = (int)map(distance, 0, 20000, 170, 0); //hoe dichter bij gezochte locatie, hoe meer helder
 	//println("brightness: "+brightness);
 	saturation = (int)map(distance, 0, 20000, 255, 0); // hoe dichter bij gezochte locatie, hoe meer saturation
 	//println("saturation;: "+saturation);
@@ -472,7 +476,7 @@ public void mouseClicked() {
  	zoekNaamLocatie(clickLocation);
  	MarkerInfo markInfo = new MarkerInfo(clickMarker, countryClick);
  	lstMarkers.add(markInfo);
- 	//println("lstMarkers: "+lstMarkers);
+ 	println("lstMarkers: "+lstMarkers);
 }
 
 public ArrayList<String> GetCountries()
@@ -578,7 +582,7 @@ public void zoekNaamLocatie(Location clickLocation) {
 
 		//webservice heeft json terug
 		json = loadJSONObject(""+uri);
-  		println("> json: "+json);
+  		//println("> json: "+json);
 
   		//Get the element that holds the information
   		JSONArray values = json.getJSONArray("geonames");
