@@ -78,6 +78,7 @@ final int portNumber = 5204;//Poort nummer waar je gaat op opstarten.
 int dataIn; //Data die de server doorstuurt naar de client.
 byte stopReadTeken = 10;
 String inString;
+String startString = "start";
 
 //CONTROLS
 ControlP5 cp5;
@@ -774,18 +775,21 @@ public void clientEvent(Client someClient)
 		inString = myClient.readStringUntil(stopReadTeken);
 		println(inString);
 
-		if(gamestate == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
+		if(gameState == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
 			zoekLatEnLong(inString);
+
+		if(inString == startString)
+		{
+			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
+			println("inString: "+inString);
+			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
+			removeStartButtons();
+			makeGoHomeButton();
+			gameState = 3;
+		}
 	}
 
-	if(inString == "start")
-		aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
-		println("dataIn: "+dataIn);
-		timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
-		removeStartButtons();
-		makeGoHomeButton();
-		gameState = 3;
-	}
+	
 
 	/*switch (dataIn) {
 		case 1 :
