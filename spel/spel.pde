@@ -774,13 +774,14 @@ public void clientEvent(Client someClient)
 		inString = myClient.readStringUntil(stopReadTeken);
 		println(inString);
 
-		if(gamestate == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
+		if(gameState == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
 			zoekLatEnLong(inString);
 	}
-
+	/*
 	switch (inString) {
 		case 'start' : println("Start doorgestuurd van de server");
 	}
+	*/
 
 	/*switch (dataIn) {
 		case 1 :
