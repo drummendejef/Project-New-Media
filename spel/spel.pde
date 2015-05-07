@@ -76,7 +76,8 @@ Server myServer; //Voor de server
 Client myClient; //Voor de client
 final int portNumber = 5204;//Poort nummer waar je gaat op opstarten.
 int dataIn; //Data die de server doorstuurt naar de client.
-byte stopReadTeken = 0;
+byte stopReadTeken = 10;
+String inString;
 
 //CONTROLS
 ControlP5 cp5;
@@ -105,8 +106,10 @@ SimplePointMarker searchMark;
 Location cursorLoc;	//locatie van de cursor
 int distance;	//afstand tussen gezochte locatie en locatie van "cursor"
 
-boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden.
+boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden
 
+final int aantalBeurten = 3; //Aantal markers die je mag zetten voordat je beurt om is.
+int aantalBeurtenResterend = 0;
 
 ArrayList<String> arrLanden = new ArrayList();
 String teZoekenLand;
@@ -148,8 +151,7 @@ void setup() {
 	//landen inladen
 	arrLanden = GetCountries();
 
-	teZoekenLand = getRandomLand(arrLanden);
-	zoekLatEnLong(teZoekenLand);
+
 
 }
 
@@ -219,6 +221,10 @@ void draw() {
 			    } catch (Exception e) {
 			    	println(">> DISTANCE: " + e);
 			    }
+
+			    //aantal resterende beurten afdrukken.
+			    //text(aantalBeurtenResterend, width / 2, 10);
+
 		break;					
 
 		case 2 : //Startscherm van de server, blijft hier op hangen tot hij en client vind.
@@ -630,6 +636,7 @@ public void speelSoloButton()
 {
 	removeStartButtons();//Startscherm weghalen
 	makeGoHomeButton();//Terug naar home button maken.
+	aantalBeurtenResterend = aantalBeurten;
 	isMultiplayer = false;//Solo spel.
 	gameState = 1;
 }
@@ -730,14 +737,22 @@ public void serverEvent(Server someServer, Client someClient)
 	//Is een multispeler spel
 	isMultiplayer = true; //(benodigd om multiplayer logica te laten werken.)
 
-	//TODO:
+	//Aantal beurten instellen
+	aantalBeurtenResterend = aantalBeurten;
+
 	//Random land kiezen
-	//Random land doorsturen naar speler.
-		
+	teZoekenLand = getRandomLand(arrLanden);
+	zoekLatEnLong(teZoekenLand);
+
+	//TODO:
+	//Naam land doorsturen naar speler.
+	myServer.write(teZoekenLand);
+	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
 
 
 	//Zeggen tegen client dat hij mag starten met countdown
-	myServer.write(1);
+	myServer.write("start");
+	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
 
 	//Countdown starten
 	timeCountDownGestart = millis();
@@ -751,18 +766,30 @@ public void clientEvent(Client someClient)
 	if(myClient.available() > 0)//Kijken of de server wel iets stuurt.
 	{
 		println("myClient.available(): "+myClient.available());
-		dataIn = myClient.read();
+		//dataIn = myClient.read();
+		inString = myClient.readStringUntil(stopReadTeken);
+		println(inString);
+
+		if(gamestate == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
+			zoekLatEnLong(inString);
 	}
 
-	switch (dataIn) {
+	switch (inString) {
+		case 'start' : println("Start doorgestuurd van de server");
+	}
+
+	/*switch (dataIn) {
 		case 1 :
+			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
 			println("dataIn: "+dataIn);
 			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
 			removeStartButtons();
 			makeGoHomeButton();
 			gameState = 3;
 		break;
+		case 2 : 
+		break;
 		
-	}
+	}*/
 
 }
