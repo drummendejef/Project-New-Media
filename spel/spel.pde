@@ -93,6 +93,10 @@ int startCountDownWaarde = 3;//Visueel zie je het dan starten bij 3.
 int timeCountDownGestart;
 int teller; 
 
+//Fonts
+PFont fontNormaal;
+PFont fontGroot;
+
 
 
 
@@ -127,6 +131,7 @@ void setup() {
 	size(800,600);
 	smooth();
 	frameRate(10);
+	noStroke();
 
 	//INIT UNFOLDING
 	setupMyMap();
@@ -154,6 +159,10 @@ void setup() {
 
 	//landen inladen
 	arrLanden = GetCountries();
+
+	//Font aanmaken
+	fontNormaal = createFont("HelveticaNeue",15);
+	fontGroot = createFont("HelveticaNeue",50);
 
 
 
@@ -229,15 +238,23 @@ void draw() {
 			    	println(">> DISTANCE: " + e);
 			    }
 
+			    //Spelinfo afdrukken
+			    textFont(fontNormaal);
 			    //aantal resterende beurten afdrukken.
-			    //text(aantalBeurtenResterend, width / 2, 10);
+			    fill(#776F5F);
+			    rect(195, 10, 160, 30);
+			    rect(495, 10, 200, 30);
+			    fill(#FFFFFF);
+			    text("Resterende beurten: " + aantalBeurtenResterend, 200, 30);
+			    text("Te zoeken land: " + teZoekenLand, 500, 30);
+
 
 		break;					
 
 		case 2 : //Startscherm van de server, blijft hier op hangen tot hij en client vind.
 				//Afdrukken IP adres 
 				background(0);
-				textFont(createFont("HelveticaNeue",15));
+				textFont(fontNormaal);
 				fill(#776F5F);
 				text("Wachtend op client om te connecten.\nMijn IP adres:" + myIP, width/2 - 100, height / 2 -50);
 		break;
@@ -245,7 +262,7 @@ void draw() {
 		case 3 : //Aftelscherm, de client is geconnecteerd met de server, aftelscherm om spelers gewaar te maken dat het spel gaat starten.
 
 				background(0);
-				textFont(createFont("HelveticaNeue",50));
+				textFont(fontGroot);
 				fill(#FF5555);
 				teller = startCountDownWaarde - int((millis() - timeCountDownGestart)/1000);
 				println("teller: "+teller);
@@ -256,7 +273,7 @@ void draw() {
 					gameState = 1;
 				}
 
-				textFont(createFont("HelveticaNeue",15));//door Joren: Dit moet hier omdat in multiplayer de tekst anders heel erg groot is (het font van de teller)
+				textFont(fontNormaal);//door Joren: Dit moet hier omdat in multiplayer de tekst anders heel erg groot is (het font van de teller)
 		break;
 
 		case 4 : //Eind scherm (beurt is gedaan, wachten op andere speler)
@@ -643,6 +660,11 @@ public void speelSoloButton()
 	makeGoHomeButton();//Terug naar home button maken.
 	aantalBeurtenResterend = aantalBeurten;
 	isMultiplayer = false;//Solo spel.
+
+	//Random land kiezen.
+	teZoekenLand = getRandomLand(arrLanden);
+	zoekLatEnLong(teZoekenLand);
+
 	gameState = 1;
 }
 
@@ -678,8 +700,6 @@ public void speelClientButton()
 
 	//Verbinden met client
 	myClient = new Client(this, serverIP, portNumber);
-
-
 }
 
 //Opvangen GoHome button (ga terug naar startscherm)
@@ -754,11 +774,6 @@ public void serverEvent(Server someServer, Client someClient)
 	myServer.write(teZoekenLand);
 	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
 
-
-	//Zeggen tegen client dat hij mag starten met countdown
-	myServer.write("start");
-	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
-
 	//Countdown starten
 	timeCountDownGestart = millis();
 	gameState = 3;
@@ -776,10 +791,9 @@ public void clientEvent(Client someClient)
 		println(inString);
 
 		if(gameState == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
-			zoekLatEnLong(inString);
-
-		if(inString == startString)
 		{
+			zoekLatEnLong(inString);
+			println("Land: "+inString);
 			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
 			println("inString: "+inString);
 			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
@@ -787,17 +801,8 @@ public void clientEvent(Client someClient)
 			makeGoHomeButton();
 			gameState = 3;
 		}
+
+		if(inString.equals("start") == true)
+			println("Hij heeft start gevonden!!!");
 	}
-
-	
-
-	/*switch (dataIn) {
-		case 1 :
-
-		break;
-		case 2 : 
-		break;
-		
-	}*/
-
 }
