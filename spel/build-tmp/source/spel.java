@@ -839,12 +839,11 @@ public void serverEvent(Server someServer, Client someClient)
 	//TODO:
 	//Naam land doorsturen naar speler.
 	myServer.write(teZoekenLand);
-	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
+	myServer.write(stopReadTeken);
 
 
 	//Zeggen tegen client dat hij mag starten met countdown
-	myServer.write("start");
-	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
+	//myServer.write(1);
 
 	//Countdown starten
 	timeCountDownGestart = millis();
@@ -861,16 +860,9 @@ public void clientEvent(Client someClient)
 		//dataIn = myClient.read();
 		inString = myClient.readStringUntil(stopReadTeken);
 		println(inString);
-
-		if(gameState == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
-			zoekLatEnLong(inString);
 	}
 
-	/*switch (inString) {
-		case 'start' : println("Start doorgestuurd van de server");
-	}*/
-
-	/*switch (dataIn) {
+	switch (dataIn) {
 		case 1 :
 			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
 			println("dataIn: "+dataIn);
@@ -882,7 +874,7 @@ public void clientEvent(Client someClient)
 		case 2 : 
 		break;
 		
-	}*/
+	}
 
 }
 //deze klasse is nodig omdat we per click een SimplePointMarker

@@ -774,17 +774,26 @@ public void clientEvent(Client someClient)
 		inString = myClient.readStringUntil(stopReadTeken);
 		println(inString);
 
-		if(gameState == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
+		if(gamestate == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
 			zoekLatEnLong(inString);
 	}
 
-	if(inString == "start")//De server heeft gemerkt dat de client is verbonden, en stuurt nu "start" om het spel te starten.
-	{
-		aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
-		println("dataIn: "+dataIn);
-		timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
-		removeStartButtons();
-		makeGoHomeButton();
-		gameState = 3;
+	switch (inString) {
+		case 'start' : println("Start doorgestuurd van de server");
 	}
+
+	/*switch (dataIn) {
+		case 1 :
+			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
+			println("dataIn: "+dataIn);
+			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
+			removeStartButtons();
+			makeGoHomeButton();
+			gameState = 3;
+		break;
+		case 2 : 
+		break;
+		
+	}*/
+
 }
