@@ -778,18 +778,18 @@ public void clientEvent(Client someClient)
 			zoekLatEnLong(inString);
 	}
 
-	switch (inString) {
-		case 'start' : println("Start doorgestuurd van de server");
+	if(inString == "start")
+		aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
+		println("dataIn: "+dataIn);
+		timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
+		removeStartButtons();
+		makeGoHomeButton();
+		gameState = 3;
 	}
 
 	/*switch (dataIn) {
 		case 1 :
-			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
-			println("dataIn: "+dataIn);
-			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
-			removeStartButtons();
-			makeGoHomeButton();
-			gameState = 3;
+
 		break;
 		case 2 : 
 		break;
