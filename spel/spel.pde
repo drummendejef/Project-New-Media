@@ -247,6 +247,20 @@ void draw() {
 
 				textFont(createFont("HelveticaNeue",15));//door Joren: Dit moet hier omdat in multiplayer de tekst anders heel erg groot is (het font van de teller)
 		break;
+
+		case 4 : //Eind scherm (beurt is gedaan, wachten op andere speler)
+
+		break;
+
+		case 5 : //Eindscherm voor allebei, winnaar aanduiden, 
+				 //verschil (afstand) tussen allebij tonen, kleinste afstand van elke speler tonen
+				 // speel opnieuw of terug naar start button.
+
+		break;
+
+		case 6 : //Spelregelscherm
+
+		break;
 	}
 	
 
