@@ -248,6 +248,14 @@ void draw() {
 			    text("Resterende beurten: " + aantalBeurtenResterend, 200, 30);
 			    text("Te zoeken land: " + teZoekenLand, 500, 30);
 
+			    //Kijken of de beurten op zijn bij multiplayer
+			    if(aantalBeurtenResterend <= 0 && isMultiplayer)
+			    	gameState = 4; //Beurten op, ga naar wachtscherm.
+
+			    //Kijken of de beurten op zijn bij singleplayer
+			    if(aantalBeurtenResterend <= 0 && !isMultiplayer)
+			    	gameState = 7;
+
 
 		break;					
 
@@ -277,6 +285,10 @@ void draw() {
 		break;
 
 		case 4 : //Eind scherm (beurt is gedaan, wachten op andere speler)
+				background(0);
+				textFont(fontNormaal);
+				fill(#776F5F);
+				text("Wachten op andere speler", width/2, height/2);
 
 		break;
 
@@ -287,7 +299,18 @@ void draw() {
 		break;
 
 		case 6 : //Spelregelscherm
+				background(0);
+				textFont(fontNormaal);
+				fill(#776F5F);
+				text("Uitleg over het spel", width/2, height/2);
 
+		break;
+
+		case 7 : //Solo eindscherm
+				background(0);
+				textFont(fontNormaal);
+				fill(#776F5F);
+				text("Spel over, eindscore: ", width/2, height/2);
 		break;
 	}
 	
@@ -427,6 +450,9 @@ void mouseClicked() {
  	MarkerInfo markInfo = new MarkerInfo(clickMarker, countryClick);
  	lstMarkers.add(markInfo);
  	println("lstMarkers: "+lstMarkers);
+
+ 	//Aantal beurten minderen
+ 	aantalBeurtenResterend--;
 }
 
 public ArrayList<String> GetCountries()
@@ -576,6 +602,8 @@ public void screenTapGestureRecognized(ScreenTapGesture gesture) {
     //ScreenPosition tapPos = tapMarker.getScreenPosition(myMap);
       
     lstMarkers.add(markInfo);
+
+    aantalBeurtenResterend--;
     //println("lstMarkers: "+lstMarkers); 
 
     /*
@@ -702,6 +730,17 @@ public void speelClientButton()
 	myClient = new Client(this, serverIP, portNumber);
 }
 
+//Opvangen spelregelbutton
+public void spelregelButton() {
+	
+	//Juiste buttons tonen
+	makeGoHomeButton();
+	removeStartButtons();
+
+	//Veranderen naar spelregelpagina
+	gameState = 6;
+}
+
 //Opvangen GoHome button (ga terug naar startscherm)
 public void homeButton()
 {
@@ -717,6 +756,7 @@ public void makeStartButtons()
 	cp5.addButton("speelServerButton", 1, width/2 - 50, height/2 - 30, 100,30).setCaptionLabel("Speel Server");//Button om als server te starten
 	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true);;//Tekstvak waar je het IP van de server moet ingeven
 	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
+	cp5.addButton("spelregelButton", 1, width/2 - 50, height/2 + 90, 100, 30).setCaptionLabel("Spelregels");//Button om het spelregelscherm te weergeven.
 }
 
 //Verwijder buttons en tekstvakken van het startscherm
@@ -726,6 +766,7 @@ public void removeStartButtons()
 	cp5.getController("speelServerButton").remove();
 	cp5.getController("speelClientTextfield").remove();
 	cp5.getController("speelClientButton").remove();
+	cp5.getController("spelregelButton").remove();
 }
 
 //Button om terug naar startscherm te gaan aanmaken
