@@ -311,7 +311,11 @@ void draw() {
 				background(0);
 				textFont(fontNormaal);
 				fill(#776F5F);
-				text("Uitleg over het spel", width/2, height/2);
+				text("Spelregels:\n In dit spel krijg je de naam van een land.\n Je moet proberen een marker in dit land te plaatsen.\n 
+					Dit doe je met behulp van de leapmotion of met je muis.\n 
+					De philips hue kan je helpen, hoe groener, hoe dichterbij, hoe roder, hoe verder.\n
+					Speel dit spel ook met 2 en zie hoe dicht je tegenspeler is!
+					", width/2, height/2);
 
 		break;
 
