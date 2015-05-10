@@ -299,7 +299,6 @@ void draw() {
 				textFont(fontNormaal);
 				fill(#776F5F);
 				text("Wachten op andere speler", width/2, height/2);
-
 		break;
 
 		case 5 : //Eindscherm voor allebei, winnaar aanduiden, 
@@ -321,6 +320,10 @@ void draw() {
 				textFont(fontNormaal);
 				fill(#776F5F);
 				text("Spel over, eindscore: ", width/2, height/2);
+
+				//TODO
+				//In die laatste lijn moet nog '+korsteDistance' (of een andere naam) afgedrukt worden.
+				//Hoe kleiner het getal, hoe beter de score.
 		break;
 	}
 	
