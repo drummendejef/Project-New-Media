@@ -336,13 +336,23 @@ public void draw() {
 			    text("Resterende beurten: " + aantalBeurtenResterend, 200, 30);
 			    text("Te zoeken land: " + teZoekenLand, 500, 30);
 
-			    //Kijken of de beurten op zijn bij multiplayer
-			    if(aantalBeurtenResterend <= 0 && isMultiplayer)
-			    	gameState = 4; //Beurten op, ga naar wachtscherm.
+			    //Kijken of de beurten op zijn
+			    if(aantalBeurtenResterend <= 0)//Beurten zijn op
+			    {
+			    	println("Beurten zijn op");
 
-			    //Kijken of de beurten op zijn bij singleplayer
-			    if(aantalBeurtenResterend <= 0 && !isMultiplayer)
-			    	gameState = 7;
+				    for (int i = lstMarkers.size() - 1; i >= 0; i--) //De markers lijst weer leeg maken.
+				    {
+	   					lstMarkers.remove(i);
+	   				}
+
+	   				//We waren singleplayer aan het spelen
+	   				if(!isMultiplayer)
+	   					gameState = 7;//Scorescherm voor solo laten zien.
+	   				else //We waren multiplayer aan het spelen.
+	   					gameState = 4;//Beurten op, ga naar wachtscherm, wachten op andere speler.
+   				}
+
 
 
 		break;					
@@ -375,6 +385,7 @@ public void draw() {
 		case 4 : //Eind scherm (beurt is gedaan, wachten op andere speler)
 				background(0);
 				textFont(fontNormaal);
+				fill(0xff776F5F);
 				text("Wachten op andere speler", width/2, height/2);
 
 		break;
@@ -387,12 +398,16 @@ public void draw() {
 
 		case 6 : //Spelregelscherm
 				background(0);
+				textFont(fontNormaal);
+				fill(0xff776F5F);
+				text("Uitleg over het spel", width/2, height/2);
 
 		break;
 
 		case 7 : //Solo eindscherm
 				background(0);
 				textFont(fontNormaal);
+				fill(0xff776F5F);
 				text("Spel over, eindscore: ", width/2, height/2);
 		break;
 	}
@@ -524,18 +539,21 @@ public void setupLeapMotion(){
 }
 
 public void mouseClicked() {
-	//locatie ophalen adhv x en y van muis
- 	Location clickLocation = myMap.getLocation(mouseX, mouseY);
- 	//marker aanmaken (die later op de map zal worden getoond)
-	SimplePointMarker clickMarker = new SimplePointMarker(clickLocation);
- 	//ScreenPosition clickPos = clickMarker.getScreenPosition(myMap);
- 	zoekNaamLocatie(clickLocation);
- 	MarkerInfo markInfo = new MarkerInfo(clickMarker, countryClick);
- 	lstMarkers.add(markInfo);
- 	println("lstMarkers: "+lstMarkers);
+	
 
- 	//Aantal beurten minderen
- 	aantalBeurtenResterend--;
+		//locatie ophalen adhv x en y van muis
+	 	Location clickLocation = myMap.getLocation(mouseX, mouseY);
+	 	//marker aanmaken (die later op de map zal worden getoond)
+		SimplePointMarker clickMarker = new SimplePointMarker(clickLocation);
+	 	//ScreenPosition clickPos = clickMarker.getScreenPosition(myMap);
+	 	zoekNaamLocatie(clickLocation);
+	 	MarkerInfo markInfo = new MarkerInfo(clickMarker, countryClick);
+	 	lstMarkers.add(markInfo);
+	 	println("lstMarkers: "+lstMarkers);
+
+	 	//Aantal beurten minderen
+	 	aantalBeurtenResterend--;
+
 }
 
 public ArrayList<String> GetCountries()
@@ -677,16 +695,19 @@ public void screenTapGestureRecognized(ScreenTapGesture gesture) {
     System.out.println("//////////////////////////////////////");
 	*/
  
+ 	//if(gameState == 1) //Enkel markers plaatsen als het spel bezig is. (lijkt niet te werken en fouten te geven.)
+ 	//{
+	    Location tapLocation = myMap.getLocation(handPos.x, handPos.y);
+	    SimplePointMarker tapMarker = new SimplePointMarker(tapLocation);
+	    zoekNaamLocatie(tapLocation);
+	    MarkerInfo markInfo = new MarkerInfo(tapMarker, countryClick);
+	    //ScreenPosition tapPos = tapMarker.getScreenPosition(myMap);
+	      
+	    lstMarkers.add(markInfo);
 
-    Location tapLocation = myMap.getLocation(handPos.x, handPos.y);
-    SimplePointMarker tapMarker = new SimplePointMarker(tapLocation);
-    zoekNaamLocatie(tapLocation);
-    MarkerInfo markInfo = new MarkerInfo(tapMarker, countryClick);
-    //ScreenPosition tapPos = tapMarker.getScreenPosition(myMap);
-      
-    lstMarkers.add(markInfo);
+	    aantalBeurtenResterend--;
+    //}
 
-    aantalBeurtenResterend--;
     //println("lstMarkers: "+lstMarkers); 
 
     /*
