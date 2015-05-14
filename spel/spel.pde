@@ -109,7 +109,7 @@ SimplePointMarker searchMark; //onzichtbare marker op de kaart (nodig om afstand
 
 
 Location cursorLoc;	//locatie van de cursor
-int distance;	//afstand tussen gezochte locatie en locatie van "cursor"
+int distance = 999999;	//afstand tussen gezochte locatie en locatie van "cursor" (joren heeft distance op 999999 gezet omdat het berekenen van de score anders fout is door de start van het spel)
 
 boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden
 
@@ -120,6 +120,8 @@ ArrayList<String> arrLanden = new ArrayList();
 String teZoekenLand;
 ArrayList<SimplePointMarker> arrMarkersSpeler1 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
 ArrayList<SimplePointMarker> arrMarkersSpeler2 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
+
+int shortestDistance = 999999; //Om de score te berekenen, moet je de korste afstand bijhouden, dat doen we hier in.
 
 
 
@@ -311,11 +313,12 @@ void draw() {
 				background(0);
 				textFont(fontNormaal);
 				fill(#776F5F);
-				text("Spelregels:\n In dit spel krijg je de naam van een land.\n Je moet proberen een marker in dit land te plaatsen.\n 
+				/*text("Spelregels:\n In dit spel krijg je de naam van een land.\n Je moet proberen een marker in dit land te plaatsen.\n 
 					Dit doe je met behulp van de leapmotion of met je muis.\n 
 					De philips hue kan je helpen, hoe groener, hoe dichterbij, hoe roder, hoe verder.\n
 					Speel dit spel ook met 2 en zie hoe dicht je tegenspeler is!
-					", width/2, height/2);
+					", width/2, height/2);*/
+				text("Spelregels", width/2, height/2);
 
 		break;
 
@@ -323,7 +326,7 @@ void draw() {
 				background(0);
 				textFont(fontNormaal);
 				fill(#776F5F);
-				text("Spel over, eindscore: ", width/2, height/2);
+				text("Spel over, eindscore: " + shortestDistance, width/2, height/2);
 
 				//TODO
 				//In die laatste lijn moet nog '+korsteDistance' (of een andere naam) afgedrukt worden.
@@ -410,11 +413,6 @@ void addMarkers(ArrayList<MarkerInfo> lst){
 }
 
 
-//TODO: 
-
-//Tekstvakje dat naam van een land weergeeft
-
-
 //Uitzoeken hoe 2 spelers te kunnen connecteren.
 // https://processing.org/reference/libraries/net/Server.html
 // https://processing.org/reference/libraries/net/Client.html
@@ -472,6 +470,13 @@ void mouseClicked() {
 
 	 	//Aantal beurten minderen
 	 	aantalBeurtenResterend--;
+
+	 	//De kleinste afstand opslaan. (om de score te berekenen)
+	 	if(shortestDistance > distance && gameState == 1)//Als de kortste afstand, groter is dan de afstand op het moment dat er geklikt wordt.
+	 	{
+	 		println("Geklikt, afstand: "+distance);
+	 		shortestDistance = distance; //De nieuwe kortste afstand wordt opgeslagen.
+	 	}
 
 }
 
