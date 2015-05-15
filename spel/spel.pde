@@ -78,7 +78,7 @@ final int portNumber = 5204;//Poort nummer waar je gaat op opstarten.
 int dataIn; //Data die de server doorstuurt naar de client.
 byte stopReadTeken = 10;
 String inString;
-String startString = "start";
+String[] messageFromServer; 
 
 //CONTROLS
 ControlP5 cp5;
@@ -122,6 +122,7 @@ ArrayList<SimplePointMarker> arrMarkersSpeler1 = new ArrayList(); //in deze arra
 ArrayList<SimplePointMarker> arrMarkersSpeler2 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
 
 int shortestDistance = 999999; //Om de score te berekenen, moet je de korste afstand bijhouden, dat doen we hier in.
+int shortestDistanceOtherPlayer; //De andere speler z'n score hier op vangen.
 
 
 
@@ -262,7 +263,7 @@ void draw() {
 
 	   				//We waren singleplayer aan het spelen
 	   				if(!isMultiplayer)
-	   					gameState = 7;//Scorescherm voor solo laten zien.
+	   					soloGameEnd();//Solospel is afgelopen, gaat hier vanalles resetten.
 	   				else //We waren multiplayer aan het spelen.
 	   					gameState = 4;//Beurten op, ga naar wachtscherm, wachten op andere speler.
    				}
@@ -782,7 +783,7 @@ public void makeStartButtons()
 {
 	cp5.addButton("speelSoloButton", 1, width/2 - 50, height/2 - 90, 100,30).setCaptionLabel("Speel Alleen");//Button om alleen te spelen
 	cp5.addButton("speelServerButton", 1, width/2 - 50, height/2 - 30, 100,30).setCaptionLabel("Speel Server");//Button om als server te starten
-	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true);;//Tekstvak waar je het IP van de server moet ingeven
+	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true).setText("192.168.1.3");//Tekstvak waar je het IP van de server moet ingeven
 	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
 	cp5.addButton("spelregelButton", 1, width/2 - 50, height/2 + 90, 100, 30).setCaptionLabel("Spelregels");//Button om het spelregelscherm te weergeven.
 }
@@ -838,9 +839,12 @@ public void serverEvent(Server someServer, Client someClient)
 	teZoekenLand = getRandomLand(arrLanden);
 	zoekLatEnLong(teZoekenLand);
 
+
 	//TODO:
-	//Naam land doorsturen naar speler.
-	myServer.write(teZoekenLand);
+	//Naam land doorsturen naar speler. 
+	//(MOET AANGEPAST WORDEN, BUG DAT HIJ GEEN NIEUW LAND STUURT BIJ OPNIEUW SPELEN)
+	//******************************************************************************
+	myServer.write("gezochtland:" + teZoekenLand);
 	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
 
 	//Countdown starten
@@ -856,22 +860,52 @@ public void clientEvent(Client someClient)
 	{
 		println("myClient.available(): "+myClient.available());
 		//dataIn = myClient.read();
-		inString = myClient.readStringUntil(stopReadTeken);
-		println(inString);
+		inString = myClient.readStringUntil(stopReadTeken);		
+	}
 
-		if(gameState == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
+	println("inString: "+inString);
+
+	if(inString != null)//De hele string is doorgestuurd geraakt, nu kunnen we er dingen mee doen.
+	{ 
+		println("DEBUG: inString is ingevuld!!!");
+		messageFromServer = split(inString, ':');//Opsplitsen, wat de boodschap is en de waarde. 
+
+		if(messageFromServer[0].equals("gezochtland"))//Het te zoeken land.
 		{
-			zoekLatEnLong(inString);
-			println("Land: "+inString);
+			println("gezochtland: "+messageFromServer[1]);
+			zoekLatEnLong(messageFromServer[1]);//Het te zoeken land omzetten naar locatie. 
+			teZoekenLand = messageFromServer[1];
+
 			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
-			println("inString: "+inString);
-			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
+			timeCountDownGestart = millis();//Om te zorgen dat de countdown weet dat hij nu gestart is, en hij niet van het begin van het opstarten van het spel gaat rekenen.
+
 			removeStartButtons();
 			makeGoHomeButton();
+
 			gameState = 3;
 		}
+		else if(messageFromServer[0].equals(""))
+		{
+			
+		}
+	}	
+}
 
-		if(inString.equals("start") == true)
-			println("Hij heeft start gevonden!!!");
-	}
+//Wordt aangeroepen als je als solo speler klaar bent met spelen
+public void soloGameEnd()
+{
+	//Gamestate veranderen
+	gameState = 7;
+
+	//Waarden terug resetten.
+	shortestDistance = 999999;
+
+	//Als je een highscore blad wil maken, zou je dat hier ook kunnen opslaan, voor een solo speler.
+}
+
+//Wordt aangeroepen als je als multiplayer klaar bent met spelen
+public void multiplayerClientGameEnd()
+{
+	//Kijken of de andere speler al klaar is
+
 }

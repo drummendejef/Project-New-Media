@@ -166,7 +166,7 @@ final int portNumber = 5204;//Poort nummer waar je gaat op opstarten.
 int dataIn; //Data die de server doorstuurt naar de client.
 byte stopReadTeken = 10;
 String inString;
-String startString = "start";
+String[] messageFromServer; 
 
 //CONTROLS
 ControlP5 cp5;
@@ -197,7 +197,7 @@ SimplePointMarker searchMark; //onzichtbare marker op de kaart (nodig om afstand
 
 
 Location cursorLoc;	//locatie van de cursor
-int distance;	//afstand tussen gezochte locatie en locatie van "cursor"
+int distance = 999999;	//afstand tussen gezochte locatie en locatie van "cursor" (joren heeft distance op 999999 gezet omdat het berekenen van de score anders fout is door de start van het spel)
 
 boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden
 
@@ -208,6 +208,9 @@ ArrayList<String> arrLanden = new ArrayList();
 String teZoekenLand;
 ArrayList<SimplePointMarker> arrMarkersSpeler1 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
 ArrayList<SimplePointMarker> arrMarkersSpeler2 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
+
+int shortestDistance = 999999; //Om de score te berekenen, moet je de korste afstand bijhouden, dat doen we hier in.
+int shortestDistanceOtherPlayer; //De andere speler z'n score hier op vangen.
 
 
 
@@ -387,7 +390,6 @@ public void draw() {
 				textFont(fontNormaal);
 				fill(0xff776F5F);
 				text("Wachten op andere speler", width/2, height/2);
-
 		break;
 
 		case 5 : //Eindscherm voor allebei, winnaar aanduiden, 
@@ -400,7 +402,12 @@ public void draw() {
 				background(0);
 				textFont(fontNormaal);
 				fill(0xff776F5F);
-				text("Uitleg over het spel", width/2, height/2);
+				/*text("Spelregels:\n In dit spel krijg je de naam van een land.\n Je moet proberen een marker in dit land te plaatsen.\n 
+					Dit doe je met behulp van de leapmotion of met je muis.\n 
+					De philips hue kan je helpen, hoe groener, hoe dichterbij, hoe roder, hoe verder.\n
+					Speel dit spel ook met 2 en zie hoe dicht je tegenspeler is!
+					", width/2, height/2);*/
+				text("Spelregels", width/2, height/2);
 
 		break;
 
@@ -408,7 +415,11 @@ public void draw() {
 				background(0);
 				textFont(fontNormaal);
 				fill(0xff776F5F);
-				text("Spel over, eindscore: ", width/2, height/2);
+				text("Spel over, eindscore: " + shortestDistance, width/2, height/2);
+
+				//TODO
+				//In die laatste lijn moet nog '+korsteDistance' (of een andere naam) afgedrukt worden.
+				//Hoe kleiner het getal, hoe beter de score.
 		break;
 	}
 	
@@ -491,11 +502,6 @@ public void addMarkers(ArrayList<MarkerInfo> lst){
 }
 
 
-//TODO: 
-
-//Tekstvakje dat naam van een land weergeeft
-
-
 //Uitzoeken hoe 2 spelers te kunnen connecteren.
 // https://processing.org/reference/libraries/net/Server.html
 // https://processing.org/reference/libraries/net/Client.html
@@ -553,6 +559,13 @@ public void mouseClicked() {
 
 	 	//Aantal beurten minderen
 	 	aantalBeurtenResterend--;
+
+	 	//De kleinste afstand opslaan. (om de score te berekenen)
+	 	if(shortestDistance > distance && gameState == 1)//Als de kortste afstand, groter is dan de afstand op het moment dat er geklikt wordt.
+	 	{
+	 		println("Geklikt, afstand: "+distance);
+	 		shortestDistance = distance; //De nieuwe kortste afstand wordt opgeslagen.
+	 	}
 
 }
 
@@ -858,7 +871,7 @@ public void makeStartButtons()
 {
 	cp5.addButton("speelSoloButton", 1, width/2 - 50, height/2 - 90, 100,30).setCaptionLabel("Speel Alleen");//Button om alleen te spelen
 	cp5.addButton("speelServerButton", 1, width/2 - 50, height/2 - 30, 100,30).setCaptionLabel("Speel Server");//Button om als server te starten
-	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true);;//Tekstvak waar je het IP van de server moet ingeven
+	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true).setText("192.168.1.3");//Tekstvak waar je het IP van de server moet ingeven
 	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
 	cp5.addButton("spelregelButton", 1, width/2 - 50, height/2 + 90, 100, 30).setCaptionLabel("Spelregels");//Button om het spelregelscherm te weergeven.
 }
@@ -914,9 +927,12 @@ public void serverEvent(Server someServer, Client someClient)
 	teZoekenLand = getRandomLand(arrLanden);
 	zoekLatEnLong(teZoekenLand);
 
+
 	//TODO:
-	//Naam land doorsturen naar speler.
-	myServer.write(teZoekenLand);
+	//Naam land doorsturen naar speler. 
+	//(MOET AANGEPAST WORDEN, BUG DAT HIJ GEEN NIEUW LAND STUURT BIJ OPNIEUW SPELEN)
+	//******************************************************************************
+	myServer.write("gezochtland:" + teZoekenLand);
 	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
 
 	//Countdown starten
@@ -932,24 +948,31 @@ public void clientEvent(Client someClient)
 	{
 		println("myClient.available(): "+myClient.available());
 		//dataIn = myClient.read();
-		inString = myClient.readStringUntil(stopReadTeken);
-		println(inString);
+		inString = myClient.readStringUntil(stopReadTeken);		
+	}
 
-		if(gameState == 0)//Als het spel nog niet gestart is, maar tijdens het connecteren, het te zoeken land opvangen.
+	println("inString: "+inString);
+
+	if(inString != null)//De hele string is doorgestuurd geraakt, nu kunnen we er dingen mee doen.
+	{ 
+		println("DEBUG: inString is ingevuld!!!");
+		messageFromServer = split(inString, ':');//Opsplitsen, wat de boodschap is en de waarde. 
+
+		if(messageFromServer[0].equals("gezochtland"))//Het te zoeken land.
 		{
-			zoekLatEnLong(inString);
-			println("Land: "+inString);
+			println("gezochtland: "+messageFromServer[1]);
+			zoekLatEnLong(messageFromServer[1]);//Het te zoeken land omzetten naar locatie. 
+			teZoekenLand = messageFromServer[1];
+
 			aantalBeurtenResterend = aantalBeurten; //Aantal beurten instellen
-			println("inString: "+inString);
-			timeCountDownGestart = millis();//Om de countdown in orde te krijgen.
+			timeCountDownGestart = millis();//Om te zorgen dat de countdown weet dat hij nu gestart is, en hij niet van het begin van het opstarten van het spel gaat rekenen.
+
 			removeStartButtons();
 			makeGoHomeButton();
+
 			gameState = 3;
 		}
-
-		if(inString.equals("start") == true)
-			println("Hij heeft start gevonden!!!");
-	}
+	}	
 }
 //deze klasse is nodig omdat we per click een SimplePointMarker
 //en een label (bv. landnaam) willen bijhouden
