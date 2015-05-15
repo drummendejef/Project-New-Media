@@ -167,6 +167,7 @@ int dataIn; //Data die de server doorstuurt naar de client.
 byte stopReadTeken = 10;
 String inString;
 String[] messageFromServer; 
+String[] messageFromClient;
 
 //CONTROLS
 ControlP5 cp5;
@@ -199,9 +200,14 @@ SimplePointMarker searchMark; //onzichtbare marker op de kaart (nodig om afstand
 Location cursorLoc;	//locatie van de cursor
 int distance = 999999;	//afstand tussen gezochte locatie en locatie van "cursor" (joren heeft distance op 999999 gezet omdat het berekenen van de score anders fout is door de start van het spel)
 
+//multiplayerlogica
 boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden
-boolean isClientReady = false;//Kijken of de client al klaar is met z'n spel.
+boolean isClientReady = false; //Kijken of de client al klaar is met z'n spel.
+boolean isServerReady = false; //Kijken of de server al klaar is met z'n spel.
 boolean isClient = false;//Ben ik de client of de server?
+boolean isWinner = false;//Ben ik de winnaar?
+
+
 
 final int aantalBeurten = 3; //Aantal markers die je mag zetten voordat je beurt om is.
 int aantalBeurtenResterend = 0;
@@ -212,7 +218,7 @@ ArrayList<SimplePointMarker> arrMarkersSpeler1 = new ArrayList(); //in deze arra
 ArrayList<SimplePointMarker> arrMarkersSpeler2 = new ArrayList(); //in deze array worden de 3 markers die de speler op de kaart heeft gezet
 
 int shortestDistance = 999999; //Om de score te berekenen, moet je de korste afstand bijhouden, dat doen we hier in.
-int shortestDistanceOtherPlayer; //De andere speler z'n score hier op vangen.
+int shortestDistanceClient = 999999; //De andere speler z'n score hier op vangen.
 
 
 
@@ -355,8 +361,14 @@ public void draw() {
 	   				if(!isMultiplayer)
 	   					soloGameEnd();//Solospel is afgelopen, gaat hier vanalles resetten.
 	   				else //We waren multiplayer aan het spelen.
-	   					gameState = 4;//Beurten op, ga naar wachtscherm, wachten op andere speler.
+	   					multiplayerGameEnd();
    				}
+
+   				//SERVER: Constant kijken of de server een "ik ben klaar"-berichtje van de client opvangt.
+				if(!isClient && !isClientReady)//Moet niet meer kijken of de client klaar is, als hij al klaar is.
+				{
+					isClientReadyWithPlaying();					
+				}
 
 
 
@@ -392,11 +404,61 @@ public void draw() {
 				textFont(fontNormaal);
 				fill(0xff776F5F);
 				text("Wachten op andere speler", width/2, height/2);
+
+				//Constant kijken of de server een "ik ben klaar"-berichtje van de client opvangt.
+				if(!isClient && !isClientReady)//Moet niet meer kijken of de client klaar is, als hij al klaar is.
+				{
+					isClientReadyWithPlaying();					
+				}
+
+				if(isClientReady && isServerReady)//Client en Server zijn klaar.
+				{
+					//TODO voor SERVER
+					
+					if(!isClient)//Werk voor de server
+					{
+						println("WINNAAR ZOEKEN.");
+						println("shortestDistance: "+shortestDistance);
+						println("shortestDistanceClient: "+shortestDistanceClient);
+
+						if(shortestDistance == shortestDistanceClient)//Kijken wie de winnaar is.
+							println("GELIJKSTAND");
+
+						if(shortestDistance < shortestDistanceClient)//Server wint
+						{
+							isWinner = true;//Dit opslaan in een global var "isWinner"
+
+							myServer.write("verliezer:" + isWinner);//Zend "verliezer" omdat de klant verloren is.
+							myServer.write(stopReadTeken);
+						}
+						else //Client wint
+						{
+							isWinner = false;//Server is de verliezer, even zeker zijn.
+
+							myServer.write("winnaar:" + isWinner);//Zend "winnaar" omdat de klant gewonnen is.
+							myServer.write(stopReadTeken);
+						}
+					}
+
+					//Naar de volgende gameState gaan.
+					gameState = 5;
+				}
 		break;
 
 		case 5 : //Eindscherm voor allebei, winnaar aanduiden, 
 				 //verschil (afstand) tussen allebij tonen, kleinste afstand van elke speler tonen
 				 // speel opnieuw of terug naar start button.
+				 background(0);
+				 textFont(fontGroot);
+				 fill(0xff776F5F);
+
+				 if(isWinner)
+					text("!!WINNAAR!!", width/2, height/2);
+				 else
+					text("Verliezer :(", width/2, height/2);
+
+
+
 
 		break;
 
@@ -418,11 +480,18 @@ public void draw() {
 				textFont(fontNormaal);
 				fill(0xff776F5F);
 				text("Spel over, eindscore: " + shortestDistance, width/2, height/2);
-
-				//TODO
-				//In die laatste lijn moet nog '+korsteDistance' (of een andere naam) afgedrukt worden.
-				//Hoe kleiner het getal, hoe beter de score.
 		break;
+
+		case 8 : //LEEG SCHERM???
+				
+
+		break;
+
+		default :
+				background(0, 0, 255);
+				fill(255);
+				text("Hoe ben je hier terecht gekomen?\n Fout in gameState", width/2, height/2);
+		break;	
 	}
 	
 
@@ -818,7 +887,7 @@ public void speelSoloButton()
 //Opvangen server button
 public void speelServerButton()
 {
-	println("In de method: speelServerButton");
+	//println("In de method: speelServerButton");
 	removeStartButtons();//Controls van het eerste scherm verwijderen.
 	makeGoHomeButton();
 	myServer = new Server(this, portNumber);
@@ -876,10 +945,16 @@ public void homeButton()
 	//Waardes van ingame al resetten
 	isMultiplayer = false;
 	isClient = false;
+	shortestDistance = 999999;
+	isClientReady = false;
+	isServerReady = false;
+	isWinner = false;
 
 	//Server en client afsluiten?
- 	myServer.stop();
-  	myClient.stop();
+  if(myServer != null)
+  	myServer.stop();
+  if(myClient != null)
+	myClient.stop();
 }
 
 //Maak buttons en tekstvakken aan voor het startscherm gamestate = 0
@@ -922,7 +997,9 @@ public void stop() {
   httpClient.getConnectionManager().shutdown();
   super.stop();
   //Server en client afsluiten?
-  myServer.stop();
+  if(myServer != null)
+  	myServer.stop();
+  if(myClient != null)
   myClient.stop();
 
 }	
@@ -939,8 +1016,13 @@ public void serverEvent(Server someServer, Client someClient)
 	//Aantal beurten instellen
 	aantalBeurtenResterend = aantalBeurten;
 
-	//Nieuw land kiezen, 
-	startNewMultiplayerGameforClient();
+	//Random land kiezen
+	teZoekenLand = getRandomLand(arrLanden);
+	zoekLatEnLong(teZoekenLand);
+
+	//Land doorsturen naar client.
+	myServer.write("gezochtland:" + teZoekenLand);
+	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
 
 	//Countdown starten
 	timeCountDownGestart = millis();
@@ -950,19 +1032,17 @@ public void serverEvent(Server someServer, Client someClient)
 //Wordt aangeroepen als de server iets stuurt.
 public void clientEvent(Client someClient)
 {
-	print("Server zegt: ");
+	//print("Server zegt: ");
 	if(myClient.available() > 0)//Kijken of de server wel iets stuurt.
 	{
-		println("myClient.available(): "+myClient.available());
 		//dataIn = myClient.read();
 		inString = myClient.readStringUntil(stopReadTeken);		
 	}
 
-	println("inString: "+inString);
-
-	if(inString != null)//De hele string is doorgestuurd geraakt, nu kunnen we er dingen mee doen.
+	if(inString != null)//De hele string is ingevuld.
 	{ 
-		println("DEBUG: inString is ingevuld!!!");
+		println("inString: "+inString);
+		//println("DEBUG: inString is ingevuld!!!");
 		messageFromServer = split(inString, ':');//Opsplitsen, wat de boodschap is en de waarde. 
 
 		if(messageFromServer[0].equals("gezochtland"))//Het te zoeken land.
@@ -979,9 +1059,36 @@ public void clientEvent(Client someClient)
 
 			gameState = 3;
 		}
-		else if(messageFromServer[0].equals(""))
+		else if(messageFromServer[0].equals("serverReady"))
 		{
+			//println("Server is klaar!");
+			isServerReady = true;
+		}
+		else if(messageFromServer[0].equals("winnaar"))
+		{
+			isWinner = true;
+
+			println("Winnaar!");
+
+			//NOTE
+			//Geprobeerd om de 2de waarde van winnaar in te lezen, maar dat ging blijkbaar niet bepaald goed.	
+			/*
+			println("Score aan het binnenlezen: " + messageFromServer[0] + " bevat " + messageFromServer[1]);
+
+			if(messageFromServer[1].equals("gewonnen"))//Server zegt dat we gewonnen zijn!
+			{
+				println("Verloren!!");
+				
+			}
+			else 
+				println("Gewonnen");*/ 
 			
+		}
+		else if(messageFromServer[0].equals("verliezer"))
+		{
+			isWinner = false;
+
+			println("Verliezer");
 		}
 	}	
 }
@@ -995,31 +1102,56 @@ public void soloGameEnd()
 	//Als je een highscore blad wil maken, zou je dat hier ook kunnen opslaan, voor een solo speler.
 }
 
-//Wordt aangeroepen als beide spelers klaar zijn, waardes resetten en 
-public void gameEnd()
-{
-	//Waarden terug resetten.
-	shortestDistance = 999999;
-}
-
 //Wordt aangeroepen als je als multiplayer klaar bent met spelen
-public void multiplayerClientGameEnd()
+public void multiplayerGameEnd()
 {
+	//TODO
 	//Kijken of de andere speler al klaar is
-	if(isClient)
-		myClient.write("klaarmetspelen");
+
+
+	if(isClient)//Client is klaar met spelen, even laten weten aan de server.
+	{
+		isClientReady = true;
+		//TODO: Stuur score door naar de server.
+		myClient.write("clientReady:"+ shortestDistance);//Zeg tegen server dat klant klaar is, score erbij steken.
+	}
+	else //Server is klaar met spelen.
+	{
+		isServerReady = true;
+		myServer.write("serverReady:" + shortestDistance);
+		myServer.write(stopReadTeken);
+	}
+
+	gameState = 4;//Naar wachtscherm gaan
+
+
+
 }
 
-//Wordt aangeroepen voor de client als er een nieuw multiplayer spel begint.
-public void startNewMultiplayerGameforClient()//Het doorgeven van een nieuw land ect.
+//Wordt aangeroepen om te kijken of de klant zegt dat hij klaar is.
+public void isClientReadyWithPlaying()
 {
-	//Random land kiezen
-	teZoekenLand = getRandomLand(arrLanden);
-	zoekLatEnLong(teZoekenLand);
+	Client thisClient = myServer.available();
 
-	//Land doorsturen naar client.
-	myServer.write("gezochtland:" + teZoekenLand);
-	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
+	//Als de klant niet null is, en iets zegt, luisteren.
+	if(thisClient != null)
+	{
+
+		String whatClientSaid = thisClient.readString();
+		if(whatClientSaid != null)
+		{
+			println("whatClientSaid: "+whatClientSaid);
+
+			messageFromClient = split(whatClientSaid, ':');//Opsplitsen van bericht.
+
+			if(messageFromClient[0].equals("clientReady"))//Klant zegt "ik ben klaar met spelen"
+			{
+				isClientReady = true;//Bijhouden dat de klant klaar is en wacht.
+				shortestDistanceClient = parseInt(messageFromClient[1]);//De score van de klant bijhouden.
+				println("shortestDistanceClient: "+shortestDistanceClient);
+			}
+		}
+	}
 }
 //deze klasse is nodig omdat we per click een SimplePointMarker
 //en een label (bv. landnaam) willen bijhouden
