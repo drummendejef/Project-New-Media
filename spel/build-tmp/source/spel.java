@@ -200,6 +200,8 @@ Location cursorLoc;	//locatie van de cursor
 int distance = 999999;	//afstand tussen gezochte locatie en locatie van "cursor" (joren heeft distance op 999999 gezet omdat het berekenen van de score anders fout is door de start van het spel)
 
 boolean isMultiplayer = false; //Om te kijken of we in multiplayer spelen of niet. Als er in multiplayer gespeeld wordt moeten er andere acties gedaan worden
+boolean isClientReady = false;//Kijken of de client al klaar is met z'n spel.
+boolean isClient = false;//Ben ik de client of de server?
 
 final int aantalBeurten = 3; //Aantal markers die je mag zetten voordat je beurt om is.
 int aantalBeurtenResterend = 0;
@@ -351,7 +353,7 @@ public void draw() {
 
 	   				//We waren singleplayer aan het spelen
 	   				if(!isMultiplayer)
-	   					gameState = 7;//Scorescherm voor solo laten zien.
+	   					soloGameEnd();//Solospel is afgelopen, gaat hier vanalles resetten.
 	   				else //We waren multiplayer aan het spelen.
 	   					gameState = 4;//Beurten op, ga naar wachtscherm, wachten op andere speler.
    				}
@@ -374,8 +376,8 @@ public void draw() {
 				textFont(fontGroot);
 				fill(0xffFF5555);
 				teller = startCountDownWaarde - PApplet.parseInt((millis() - timeCountDownGestart)/1000);
-				println("teller: "+teller);
-				println("millis()/1000: "+millis()/1000);
+				//println("teller: "+teller);
+				//println("millis()/1000: "+millis()/1000);
 				text(teller, width/2, height/2);
 				if(teller <= 0)//Als de teller is afgelopen, spel beginnen.
 				{
@@ -843,8 +845,14 @@ public void speelClientButton()
 	//tekstvak (IP) leeghalen
 	String serverIP = cp5.get(Textfield.class, "speelClientTextfield").getText();
 
-	//Verbinden met client
+	//Verbinden met server
 	myClient = new Client(this, serverIP, portNumber);
+
+	//Ik ben de client!
+	isClient = true;
+
+	//Is een multispeler spel
+	isMultiplayer = true; //(benodigd om multiplayer logica te laten werken.)
 }
 
 //Opvangen spelregelbutton
@@ -864,6 +872,14 @@ public void homeButton()
 	gameState = 0;
 	makeStartButtons();
 	removeGoHomeButton();
+
+	//Waardes van ingame al resetten
+	isMultiplayer = false;
+	isClient = false;
+
+	//Server en client afsluiten?
+ 	myServer.stop();
+  	myClient.stop();
 }
 
 //Maak buttons en tekstvakken aan voor het startscherm gamestate = 0
@@ -923,17 +939,8 @@ public void serverEvent(Server someServer, Client someClient)
 	//Aantal beurten instellen
 	aantalBeurtenResterend = aantalBeurten;
 
-	//Random land kiezen
-	teZoekenLand = getRandomLand(arrLanden);
-	zoekLatEnLong(teZoekenLand);
-
-
-	//TODO:
-	//Naam land doorsturen naar speler. 
-	//(MOET AANGEPAST WORDEN, BUG DAT HIJ GEEN NIEUW LAND STUURT BIJ OPNIEUW SPELEN)
-	//******************************************************************************
-	myServer.write("gezochtland:" + teZoekenLand);
-	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
+	//Nieuw land kiezen, 
+	startNewMultiplayerGameforClient();
 
 	//Countdown starten
 	timeCountDownGestart = millis();
@@ -972,7 +979,47 @@ public void clientEvent(Client someClient)
 
 			gameState = 3;
 		}
+		else if(messageFromServer[0].equals(""))
+		{
+			
+		}
 	}	
+}
+
+//Wordt aangeroepen als je als solo speler klaar bent met spelen
+public void soloGameEnd()
+{
+	//Gamestate veranderen naar wachtscherm
+	gameState = 7;
+
+	//Als je een highscore blad wil maken, zou je dat hier ook kunnen opslaan, voor een solo speler.
+}
+
+//Wordt aangeroepen als beide spelers klaar zijn, waardes resetten en 
+public void gameEnd()
+{
+	//Waarden terug resetten.
+	shortestDistance = 999999;
+}
+
+//Wordt aangeroepen als je als multiplayer klaar bent met spelen
+public void multiplayerClientGameEnd()
+{
+	//Kijken of de andere speler al klaar is
+	if(isClient)
+		myClient.write("klaarmetspelen");
+}
+
+//Wordt aangeroepen voor de client als er een nieuw multiplayer spel begint.
+public void startNewMultiplayerGameforClient()//Het doorgeven van een nieuw land ect.
+{
+	//Random land kiezen
+	teZoekenLand = getRandomLand(arrLanden);
+	zoekLatEnLong(teZoekenLand);
+
+	//Land doorsturen naar client.
+	myServer.write("gezochtland:" + teZoekenLand);
+	myServer.write(stopReadTeken);//Zeggen tegen de client dat de boodschap is doorgegeven.
 }
 //deze klasse is nodig omdat we per click een SimplePointMarker
 //en een label (bv. landnaam) willen bijhouden
