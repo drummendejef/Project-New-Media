@@ -98,6 +98,9 @@ int teller;
 PFont fontNormaal;
 PFont fontGroot;
 
+//Afbeeldingen
+PImage speluitlegImage;
+
 
 
 
@@ -175,6 +178,12 @@ void setup() {
 	fontNormaal = createFont("HelveticaNeue",15);
 	fontGroot = createFont("HelveticaNeue",50);
 
+	//Afbeeldingen inladen
+	//speluitlegImage = loadImage("./Afbeeldingen/New_Media_EindProject_Speluitleg.jpg");
+	speluitlegImage = loadImage("speluitleg.jpg");
+
+	//Zorgen dat de coordinaten van waar we beginnen het center van de foto zijn.
+	//imageMode(CENTER);
 
 
 }
@@ -375,15 +384,17 @@ void draw() {
 		break;
 
 		case 6 : //Spelregelscherm
-				background(0);
+				/*background(0);
 				textFont(fontNormaal);
 				fill(#776F5F);
 				/*text("Spelregels:\n In dit spel krijg je de naam van een land.\n Je moet proberen een marker in dit land te plaatsen.\n 
 					Dit doe je met behulp van de leapmotion of met je muis.\n 
 					De philips hue kan je helpen, hoe groener, hoe dichterbij, hoe roder, hoe verder.\n
 					Speel dit spel ook met 2 en zie hoe dicht je tegenspeler is!
-					", width/2, height/2);*/
-				text("Spelregels", width/2, height/2);
+					", width/2, height/2);
+				//text("Spelregels", width/2, height/2);
+
+				image(speluitlegImage, width/2, height/2);*/
 
 		break;
 
@@ -392,11 +403,6 @@ void draw() {
 				textFont(fontNormaal);
 				fill(#776F5F);
 				text("Spel over, eindscore: " + shortestDistance, width/2, height/2);
-		break;
-
-		case 8 : //LEEG SCHERM???
-				
-
 		break;
 
 		default :
@@ -529,7 +535,8 @@ public void setupLeapMotion(){
 
 void mouseClicked() {
 	
-
+	if(gameState == 1)
+	{
 		//locatie ophalen adhv x en y van muis
 	 	Location clickLocation = myMap.getLocation(mouseX, mouseY);
 	 	//marker aanmaken (die later op de map zal worden getoond)
@@ -544,11 +551,12 @@ void mouseClicked() {
 	 	aantalBeurtenResterend--;
 
 	 	//De kleinste afstand opslaan. (om de score te berekenen)
-	 	if(shortestDistance > distance && gameState == 1)//Als de kortste afstand, groter is dan de afstand op het moment dat er geklikt wordt.
+	 	if(shortestDistance > distance /*&& gameState == 1*/)//Als de kortste afstand, groter is dan de afstand op het moment dat er geklikt wordt.
 	 	{
 	 		println("Geklikt, afstand: "+distance);
 	 		shortestDistance = distance; //De nieuwe kortste afstand wordt opgeslagen.
 	 	}
+	 }
 
 }
 
@@ -839,12 +847,15 @@ public void speelClientButton()
 //Opvangen spelregelbutton
 public void spelregelButton() {
 	
+        println("spelregelButton ingedrukt");
 	//Juiste buttons tonen
+	removeStartButtons();//Controls van het eerste scherm verwijderen.
 	makeGoHomeButton();
-	removeStartButtons();
+	
+        
 
 	//Veranderen naar spelregelpagina
-	gameState = 6;
+	//gameState = 6;
 }
 
 //Opvangen GoHome button (ga terug naar startscherm)
@@ -863,10 +874,16 @@ public void homeButton()
 	isWinner = false;
 
 	//Server en client afsluiten?
-  if(myServer != null)
-  	myServer.stop();
-  if(myClient != null)
-	myClient.stop();
+	if(myServer != null)
+  	{
+  		myServer.stop();
+  		myServer = null;
+  	}
+  	if(myClient != null)
+  	{
+		myClient.stop();
+		myClient = null;
+  	}
 }
 
 //Maak buttons en tekstvakken aan voor het startscherm gamestate = 0
@@ -874,7 +891,7 @@ public void makeStartButtons()
 {
 	cp5.addButton("speelSoloButton", 1, width/2 - 50, height/2 - 90, 100,30).setCaptionLabel("Speel Alleen");//Button om alleen te spelen
 	cp5.addButton("speelServerButton", 1, width/2 - 50, height/2 - 30, 100,30).setCaptionLabel("Speel Server");//Button om als server te starten
-	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true).setText("192.168.1.3");//Tekstvak waar je het IP van de server moet ingeven
+	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true);//Tekstvak waar je het IP van de server moet ingeven
 	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
 	cp5.addButton("spelregelButton", 1, width/2 - 50, height/2 + 90, 100, 30).setCaptionLabel("Spelregels");//Button om het spelregelscherm te weergeven.
 }
@@ -981,19 +998,6 @@ public void clientEvent(Client someClient)
 			isWinner = true;
 
 			println("Winnaar!");
-
-			//NOTE
-			//Geprobeerd om de 2de waarde van winnaar in te lezen, maar dat ging blijkbaar niet bepaald goed.	
-			/*
-			println("Score aan het binnenlezen: " + messageFromServer[0] + " bevat " + messageFromServer[1]);
-
-			if(messageFromServer[1].equals("gewonnen"))//Server zegt dat we gewonnen zijn!
-			{
-				println("Verloren!!");
-				
-			}
-			else 
-				println("Gewonnen");*/ 
 			
 		}
 		else if(messageFromServer[0].equals("verliezer"))
@@ -1043,24 +1047,27 @@ public void multiplayerGameEnd()
 //Wordt aangeroepen om te kijken of de klant zegt dat hij klaar is.
 public void isClientReadyWithPlaying()
 {
-	Client thisClient = myServer.available();
-
-	//Als de klant niet null is, en iets zegt, luisteren.
-	if(thisClient != null)
+	if(myServer != null)
 	{
+		Client thisClient = myServer.available();
 
-		String whatClientSaid = thisClient.readString();
-		if(whatClientSaid != null)
+		//Als de klant niet null is, en iets zegt, luisteren.
+		if(thisClient != null)
 		{
-			println("whatClientSaid: "+whatClientSaid);
 
-			messageFromClient = split(whatClientSaid, ':');//Opsplitsen van bericht.
-
-			if(messageFromClient[0].equals("clientReady"))//Klant zegt "ik ben klaar met spelen"
+			String whatClientSaid = thisClient.readString();
+			if(whatClientSaid != null)
 			{
-				isClientReady = true;//Bijhouden dat de klant klaar is en wacht.
-				shortestDistanceClient = parseInt(messageFromClient[1]);//De score van de klant bijhouden.
-				println("shortestDistanceClient: "+shortestDistanceClient);
+				println("whatClientSaid: "+whatClientSaid);
+
+				messageFromClient = split(whatClientSaid, ':');//Opsplitsen van bericht.
+
+				if(messageFromClient[0].equals("clientReady"))//Klant zegt "ik ben klaar met spelen"
+				{
+					isClientReady = true;//Bijhouden dat de klant klaar is en wacht.
+					shortestDistanceClient = parseInt(messageFromClient[1]);//De score van de klant bijhouden.
+					println("shortestDistanceClient: "+shortestDistanceClient);
+				}
 			}
 		}
 	}
