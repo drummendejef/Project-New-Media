@@ -174,11 +174,13 @@ PFont fontNormaal;
 PFont fontGroot;
 
 PFont f;
+//PFont fontControls;
+ControlFont fontControls;
 
 
 //Afbeeldingen
 PImage speluitlegImage;
-
+PImage achtergrondHome;
 
 
 
@@ -227,7 +229,7 @@ int winnendeAfstand;
 
 public void setup() {
 	//Venster aanmaken
-	size(800,600);
+	size(1200,700);
 	smooth();
 	frameRate(10);
 	noStroke();
@@ -254,21 +256,23 @@ public void setup() {
 	//Startscherm controls aanmaken (gamestate = 0)
 	makeStartButtons();
 
-	//Mag waarschijnlijk al weg.
-	//println("DEVELOPER COMMENTAAR:\nDruk op s om solo te starten,\n Druk a om als server te starten,\n Druk z om als client te starten.");
-
 	//landen inladen
 	arrLanden = GetCountries();
 
 	//Font aanmaken
+		/*print list met aanwezige fonts op computer
+		String[] fontList = PFont.list();
+				println(fontList);
+	*/
 	fontNormaal = createFont("HelveticaNeue",15);
 	fontGroot = createFont("HelveticaNeue",50);
-	f = createFont( "Arial" ,16,true);
+	f = createFont( "Arial",16,true);
 
 
 	//Afbeeldingen inladen
 	//speluitlegImage = loadImage("./Afbeeldingen/New_Media_EindProject_Speluitleg.jpg");
 	speluitlegImage = loadImage("speluitleg.jpg");
+	achtergrondHome = loadImage("achtergrond_home.PNG");
 
 	//Zorgen dat de coordinaten van waar we beginnen het center van de foto zijn.
 	//imageMode(CENTER);
@@ -281,7 +285,8 @@ public void draw() {
 
 	switch (gameState) {
 		case 0 : //INTRO (kiezen van spelmodus, en van hoe )
-			background(0);
+			background(221,217,195);
+			image(achtergrondHome,0,0);
 			
 			if(!isResetCompleted){
 				println("> Bezig met reset ...");
@@ -790,10 +795,22 @@ public void circleGestureRecognized(CircleGesture gesture, String clockwiseness)
 
 //Maak buttons en tekstvakken aan voor het startscherm gamestate = 0
 public void makeStartButtons(){
-	cp5.addButton("speelSoloButton", 1, width/2 - 50, height/2 - 90, 100,30).setCaptionLabel("Speel Alleen");//Button om alleen te spelen
-	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true);//Tekstvak waar je het IP van de server moet ingeven
-	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
-	cp5.addButton("spelregelButton", 1, width/2 - 50, height/2 + 90, 100, 30).setCaptionLabel("Spelregels");//Button om het spelregelscherm te weergeven.
+	cp5.setColorBackground(color(94,94,94))
+		.setColorCaptionLabel(color(191,191,191))
+		.setFont(createFont("Arabic Typesetting",20,true));
+
+	cp5.addButton("speelSoloButton", 1, width/2 - 520, height/2 + 90, 250,40)
+		.setCaptionLabel("een speler")
+		.getCaptionLabel().align(CENTER,CENTER);//Button om alleen te spelen
+	cp5.addTextfield("speelClientTextfield",width/2 - 250, height/2 + 150,  250,40)
+		.setCaptionLabel("GEEF IP ADRES VAN SERVER").setColorCaptionLabel(0)
+		.setFocus(true);//Tekstvak waar je het IP van de server moet ingeven
+	cp5.addButton("speelClientButton",1,width/2 - 250, height/2 + 90,  250,40)
+		.setCaptionLabel("twee spelers")
+		.getCaptionLabel().align(CENTER,CENTER);//Button om als client te starten.
+	cp5.addButton("spelregelButton", 1, width/2 + 250, height/2 + 90,  250,40)
+		.setCaptionLabel("spelregels")
+		.getCaptionLabel().align(CENTER,CENTER);//Button om het spelregelscherm te weergeven.
 	cp5.addButton("homeButton", 1, 10,10,60,30); //Button om terug naar startscherm te gaan aanmaken
 	hideGoHomeButton();
 }
