@@ -140,12 +140,15 @@ public void setup() {
 }
 
 public void draw() {
-	
+	if (aantalClients == 0) {
+		serverState = 1;
+	}
 	switch (serverState) {
 		case 1 :	
 				//server is opgestart
 				//Startscherm van de server, blijft hier op hangen tot hij en client vindt
-				//Afdrukken IP adres 
+				//Afdrukken IP adres
+				background(200, 80); 
 				textFont(f);
 				textAlign(CENTER);
 				text("Wachtend op client om te connecteren.\nMijn IP adres:" + myIP +
@@ -287,6 +290,7 @@ public void luisterNaarClientBerichten(){
 				String state = "GAMESTATE";
 				String land = "LAND";
 				String ready = "clientReady";
+				String exit = "EXIT";
 
 				println("messageCode: "+messageCode);
 
@@ -330,6 +334,12 @@ public void luisterNaarClientBerichten(){
 							println("> SERVER VERSTUURT: GAMESTATE;5");
 						break;	
 					}
+				} else if (messageCode.equals(exit) == true) {
+					myServer.disconnect(myClient);
+					println("> SERVER: DISCONNECTING CLIENT");
+
+					aantalClients -= 1;
+					aantalReadyClients -=1;
 				}
 		} catch (Exception e) {
 			println("e: "+e);

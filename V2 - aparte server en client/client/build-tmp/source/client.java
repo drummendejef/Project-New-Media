@@ -218,6 +218,7 @@ boolean isResetCompleted = true;
 boolean isEndMapFinished = false;
 boolean isFirstLoop = true;
 boolean isFirstLoop2 = true;
+boolean isServerOpDeHoogte = false;
 
 
 String messageCode; //bepaalt welke soort bericht de server stuurt 
@@ -436,6 +437,9 @@ public void draw() {
 					fill(200, 80);
 					rect(0,0, width, height);
 
+					makeGoHomeButton();				
+
+
 					isFirstLoop2 = false;
 				};
 				/*
@@ -461,6 +465,13 @@ public void draw() {
 				textAlign(CENTER);
 
 				if (isMultiplayer) {
+					if (!isServerOpDeHoogte) {
+						myClient.write("EXIT*");
+						println("> CLIENT STUURT: EXIT");
+
+						isServerOpDeHoogte = true;
+					}
+					
 					if (isWinner) {
 						text("!!WINNAAR!!", width/2, height/2);
 						textSize(25);
@@ -475,7 +486,8 @@ public void draw() {
 				} else {
 					textSize(25);
 					text("Je was " + shortestDistance + "km verwijderd van " + teZoekenLand, width/2, height/2);
-				}				
+				}
+
 		break;
 
 		default :
@@ -841,6 +853,8 @@ public void homeButton()
 
 	//Waardes van ingame al resetten
 	shortestDistance = 999999;
+
+
 }
 
 //Maak buttons en tekstvakken aan voor het startscherm gamestate = 0
@@ -885,6 +899,10 @@ public void stop() {
   httpClient.getConnectionManager().shutdown();
   super.stop();
 
+  myClient.write("EXIT*");
+	println("> CLIENT STUURT: EXIT");
+  	
+  
 
 }	
 
@@ -903,10 +921,13 @@ public void resetMap(){
 	lstMarkers.clear();
 	setupMyMap();
 	
+	//booleans terug naar beginwaarde zetten
 	isResetCompleted = true;
 	isEndMapFinished = false;
 	isFirstLoop = true;
 	isFirstLoop2 = true;
+	isServerOpDeHoogte = false;
+	isWinner = false;
 }
 
 //MULTIPLAYER
