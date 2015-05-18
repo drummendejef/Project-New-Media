@@ -437,7 +437,7 @@ public void draw() {
 					fill(200, 80);
 					rect(0,0, width, height);
 
-					makeGoHomeButton();				
+					showGoHomeButton();				
 
 
 					isFirstLoop2 = false;
@@ -496,69 +496,7 @@ public void draw() {
 	}
 }
 
-
-public void veranderKleurHue(){
-	try {
-    String data = "{\"on\":true, \"hue\":"+hue+", \"bri\":"+brightness+", \"sat\":"+saturation+", \"transitiontime\":5}";
-
-    StringEntity se = new StringEntity(data);
-    HttpPut httpPut = new HttpPut("http://"+IP+"/api/"+KEY+"/lights/3/state");
-
-    httpPut.setEntity(se);
-
-    HttpResponse response = httpClient.execute(httpPut);
-    HttpEntity entity = response.getEntity();
-    if (entity != null) entity.consumeContent();
-  }
-  catch(Exception e) {
-    e.printStackTrace();
-  }
-}
-
-public void stelHueWaardenIn(){
-	//max hue = 65.280
-	//max brightness = 255
-	//max saturation = 255
-	//max distance = +-20.000
-
-	hue = (int)map(distance, 0, 20000, 0, 46920); // hoe dichter bij gezochte locatie, hoe roder 
-	//println("hue: "+hue);
-	brightness = (int)map(distance, 0, 20000, 170, 0); //hoe dichter bij gezochte locatie, hoe meer helder
-	//println("brightness: "+brightness);
-	saturation = (int)map(distance, 0, 20000, 255, 0); // hoe dichter bij gezochte locatie, hoe meer saturation
-	//println("saturation;: "+saturation);
-}
-
-
-public void checkPanning(PVector handPosition){
-
-    Location panLocation = myMap.getLocation(handPosition.x,handPosition.y);
-    // map.panTo(handPosition.x, handPosition.y);
-    myMap.panTo(panLocation);
-}
-
-public void addMarkers(ArrayList<MarkerInfo> lst){
-	try {
-		//alle markers overlopen in ArrayList
-		for (MarkerInfo markInfo : lst) {
-
-			//MarkerInfo heeft 2 fields: marker (SimplePointMarker, de default marker) en info (String, bevat naam land)
-			Location clickLocation = markInfo.marker.getLocation();
-			ScreenPosition clickPos = markInfo.marker.getScreenPosition(myMap);
-			float txtWidth = textWidth(markInfo.info);
-	  		
-
-			//we maken een custom marker 'ClickLocationMarker' (zelfgemaakte klasse)
-			ClickLocationMarker clickMarker = new ClickLocationMarker(clickLocation, markInfo.info, txtWidth);
-			//plaatsen marker op de map
-			myMap.addMarkers(clickMarker);		
-		}
-	} catch (Exception e) {
-		println("> addMarker: "+e);
-	}	
-}
-
-
+/*-----------------------------------------------START SETUP-----------------------------------------------*/
 public void setupMyMap(){
 	//initialize a new map object and add default event functioning
 	//for basis interaction
@@ -592,36 +530,48 @@ public void setupLeapMotion(){
   leap.enableGesture(Type.TYPE_CIRCLE);
   leap.enableGesture(Type.TYPE_KEY_TAP);
 }
+/*-----------------------------------------------EINDE SETUP-----------------------------------------------*/
 
-public void mouseClicked() {
-	
-	if(gameState == 3)
-	{
-		//locatie ophalen adhv x en y van muis
-	 	Location clickLocation = myMap.getLocation(mouseX, mouseY);
-	 	//marker aanmaken (die later op de map zal worden getoond)
-		SimplePointMarker clickMarker = new SimplePointMarker(clickLocation);
-	 	//ScreenPosition clickPos = clickMarker.getScreenPosition(myMap);
-	 	zoekNaamLocatie(clickLocation);
-	 	MarkerInfo markInfo = new MarkerInfo(clickMarker, countryClick);
-	 	lstMarkers.add(markInfo);
-	 	println("lstMarkers: "+lstMarkers);
 
-	 	//Aantal beurten minderen
-	 	aantalBeurtenResterend--;
+/*-----------------------------------------------START HUE-----------------------------------------------*/
 
-	 	//De kleinste afstand opslaan. (om de score te berekenen)
-	 	if(shortestDistance > distance /*&& gameState == 1*/)//Als de kortste afstand, groter is dan de afstand op het moment dat er geklikt wordt.
-	 	{
-	 		println("Geklikt, afstand: "+distance);
-	 		shortestDistance = distance; //De nieuwe kortste afstand wordt opgeslagen.
-	 	}
-	 }
+public void veranderKleurHue(){
+	try {
+    String data = "{\"on\":true, \"hue\":"+hue+", \"bri\":"+brightness+", \"sat\":"+saturation+", \"transitiontime\":5}";
 
+    StringEntity se = new StringEntity(data);
+    HttpPut httpPut = new HttpPut("http://"+IP+"/api/"+KEY+"/lights/3/state");
+
+    httpPut.setEntity(se);
+
+    HttpResponse response = httpClient.execute(httpPut);
+    HttpEntity entity = response.getEntity();
+    if (entity != null) entity.consumeContent();
+  }
+  catch(Exception e) {
+    e.printStackTrace();
+  }
 }
 
-public ArrayList<String> GetCountries()
-{
+public void stelHueWaardenIn(){
+	//max hue = 65.280
+	//max brightness = 255
+	//max saturation = 255
+	//max distance = +-20.000
+
+	hue = (int)map(distance, 0, 20000, 0, 46920); // hoe dichter bij gezochte locatie, hoe roder 
+	//println("hue: "+hue);
+	brightness = (int)map(distance, 0, 20000, 170, 0); //hoe dichter bij gezochte locatie, hoe meer helder
+	//println("brightness: "+brightness);
+	saturation = (int)map(distance, 0, 20000, 255, 0); // hoe dichter bij gezochte locatie, hoe meer saturation
+	//println("saturation;: "+saturation);
+}
+/*-----------------------------------------------EINDE HUE-----------------------------------------------*/
+
+
+/*-----------------------------------------------START KAART-----------------------------------------------*/
+
+public ArrayList<String> GetCountries(){
 	//webservice: http://www.groupkt.com/post/c9b0ccb9/restful-webservices-to-get-and-search-countries.htm
 
 	try {
@@ -747,6 +697,31 @@ public void zoekNaamLocatie(Location clickLocation) {
 	}
 }
 
+public void addMarkers(ArrayList<MarkerInfo> lst){
+	try {
+		//alle markers overlopen in ArrayList
+		for (MarkerInfo markInfo : lst) {
+
+			//MarkerInfo heeft 2 fields: marker (SimplePointMarker, de default marker) en info (String, bevat naam land)
+			Location clickLocation = markInfo.marker.getLocation();
+			ScreenPosition clickPos = markInfo.marker.getScreenPosition(myMap);
+			float txtWidth = textWidth(markInfo.info);
+	  		
+
+			//we maken een custom marker 'ClickLocationMarker' (zelfgemaakte klasse)
+			ClickLocationMarker clickMarker = new ClickLocationMarker(clickLocation, markInfo.info, txtWidth);
+			//plaatsen marker op de map
+			myMap.addMarkers(clickMarker);		
+		}
+	} catch (Exception e) {
+		println("> addMarker: "+e);
+	}	
+}
+/*-----------------------------------------------EINDE KAART-----------------------------------------------*/
+
+
+
+/*-----------------------------------------------START LEAPMOTION-----------------------------------------------*/
 
 public void screenTapGestureRecognized(ScreenTapGesture gesture) {
   if (gesture.state() == State.STATE_STOP) {
@@ -808,54 +783,10 @@ public void circleGestureRecognized(CircleGesture gesture, String clockwiseness)
 	}
 }
 
-//Opvangen speel alleen button
-public void speelSoloButton()
-{
-	hideStartButtons();//Startscherm weghalen
-	makeGoHomeButton();//Terug naar home button maken.
-	aantalBeurtenResterend = aantalBeurten;
-
-	//Random land kiezen.
-	teZoekenLand = getRandomLand(arrLanden);
-	plaatsTeZoekenLandOpKaart(teZoekenLand);
-
-	timeCountDownGestart = millis();
-
-	gameState = 2; //aftellen beginnen
-
-}
+/*-----------------------------------------------EINDE LEAPMOTION-----------------------------------------------*/
 
 
-
-//Opvangen spelregelbutton
-public void spelregelButton() {
-	
-    println("spelregelButton ingedrukt");
-	//Juiste buttons tonen
-	hideStartButtons();//Controls van het eerste scherm verwijderen.
-	makeGoHomeButton();
-	
-        
-
-	//Veranderen naar spelregelpagina
-	//gameState = 6;
-}
-
-//Opvangen GoHome button (ga terug naar startscherm)
-public void homeButton()
-{
-	gameState = 0;
-
-	showStartButtons();
-	removeGoHomeButton();
-
-	isResetCompleted = false;
-
-	//Waardes van ingame al resetten
-	shortestDistance = 999999;
-
-
-}
+/*-----------------------------------------------START BUTTONS-----------------------------------------------*/
 
 //Maak buttons en tekstvakken aan voor het startscherm gamestate = 0
 public void makeStartButtons(){
@@ -863,6 +794,8 @@ public void makeStartButtons(){
 	cp5.addTextfield("speelClientTextfield",width/2 - 110, height/2 + 30, 100,30).setCaptionLabel("Speel als client, geef IP van server in").setFocus(true);//Tekstvak waar je het IP van de server moet ingeven
 	cp5.addButton("speelClientButton",1,width/2 + 10, height/2 + 30, 100,30).setCaptionLabel("Start als Client");//Button om als client te starten.
 	cp5.addButton("spelregelButton", 1, width/2 - 50, height/2 + 90, 100, 30).setCaptionLabel("Spelregels");//Button om het spelregelscherm te weergeven.
+	cp5.addButton("homeButton", 1, 10,10,60,30); //Button om terug naar startscherm te gaan aanmaken
+	hideGoHomeButton();
 }
 
 //Verwijder buttons en tekstvakken van het startscherm
@@ -880,61 +813,65 @@ public void showStartButtons(){
 	cp5.getController("spelregelButton").show();
 }
 
-//Button om terug naar startscherm te gaan aanmaken
-public void makeGoHomeButton() {
-	cp5.addButton("homeButton", 1, 10,10,60,30);
-}
-
 //Button om terug naar startscherm te gaan verwijderen
-public void removeGoHomeButton() 
-{
+public void hideGoHomeButton(){
 	cp5.getController("homeButton").hide();
 }
 
-
-
-
-public void stop() {
-  leap.stop();
-  httpClient.getConnectionManager().shutdown();
-  super.stop();
-
-  myClient.write("EXIT*");
-	println("> CLIENT STUURT: EXIT");
-  	
-  
-
-}	
-
-
-//Wordt aangeroepen als je als solo speler klaar bent met spelen
-public void soloGameEnd()
-{
-	//Gamestate veranderen naar wachtscherm
-	gameState = 5;
-
-	//Als je een highscore blad wil maken, zou je dat hier ook kunnen opslaan, voor een solo speler.
+public void showGoHomeButton(){
+	cp5.getController("homeButton").show();
 }
 
+//Opvangen speel alleen button
+public void speelSoloButton(){
+	hideStartButtons();//Startscherm weghalen
+	showGoHomeButton();//Terug naar home button maken.
+	aantalBeurtenResterend = aantalBeurten;
 
-public void resetMap(){
-	lstMarkers.clear();
-	setupMyMap();
+	//Random land kiezen.
+	teZoekenLand = getRandomLand(arrLanden);
+	plaatsTeZoekenLandOpKaart(teZoekenLand);
+
+	timeCountDownGestart = millis();
+
+	gameState = 2; //aftellen beginnen
+}
+
+//Opvangen spelregelbutton
+public void spelregelButton() {
 	
-	//booleans terug naar beginwaarde zetten
-	isResetCompleted = true;
-	isEndMapFinished = false;
-	isFirstLoop = true;
-	isFirstLoop2 = true;
-	isServerOpDeHoogte = false;
-	isWinner = false;
+    println("spelregelButton ingedrukt");
+	//Juiste buttons tonen
+	hideStartButtons();//Controls van het eerste scherm verwijderen.
+	showGoHomeButton();
+	
+        
+
+	//Veranderen naar spelregelpagina
+	//gameState = 6;
 }
 
-//MULTIPLAYER
-//Opvangen client button
-public void speelClientButton()
-{
+//Opvangen GoHome button (ga terug naar startscherm)
+public void homeButton(){
+	gameState = 0;
 
+	showStartButtons();
+	hideGoHomeButton();
+
+	isResetCompleted = false;
+
+	//Waardes van ingame al resetten
+	shortestDistance = 999999;
+}
+
+/*-----------------------------------------------EINDE BUTTONS-----------------------------------------------*/
+
+
+
+
+/*-----------------------------------------------START MULTIPLAYER-----------------------------------------------*/
+//Opvangen client button
+public void speelClientButton(){
 	//tekstvak (IP) leeghalen
 	String serverIP = cp5.get(Textfield.class, "speelClientTextfield").getText();
 	println("serverIP: "+serverIP);
@@ -1005,8 +942,7 @@ public void luisterNaarServer(){
 	//}	
 }
 
-public void multiplayerGameEnd()
-{
+public void multiplayerGameEnd(){
 	//TODO
 	//Kijken of de andere speler al klaar is
 
@@ -1018,7 +954,74 @@ public void multiplayerGameEnd()
 
 	gameState = 4;//Naar wachtscherm gaan
 }
+/*-----------------------------------------------EINDE MULTIPLAYER-----------------------------------------------*/
 
+
+/*-----------------------------------------------START OVERIG-----------------------------------------------*/
+
+public void stop() {
+  leap.stop();
+  httpClient.getConnectionManager().shutdown();
+  super.stop();
+}	
+
+public void checkPanning(PVector handPosition){
+
+    Location panLocation = myMap.getLocation(handPosition.x,handPosition.y);
+    // map.panTo(handPosition.x, handPosition.y);
+    myMap.panTo(panLocation);
+}
+
+public void mouseClicked(){
+	
+	if(gameState == 3)
+	{
+		//locatie ophalen adhv x en y van muis
+	 	Location clickLocation = myMap.getLocation(mouseX, mouseY);
+	 	//marker aanmaken (die later op de map zal worden getoond)
+		SimplePointMarker clickMarker = new SimplePointMarker(clickLocation);
+	 	//ScreenPosition clickPos = clickMarker.getScreenPosition(myMap);
+	 	zoekNaamLocatie(clickLocation);
+	 	MarkerInfo markInfo = new MarkerInfo(clickMarker, countryClick);
+	 	lstMarkers.add(markInfo);
+	 	println("lstMarkers: "+lstMarkers);
+
+	 	//Aantal beurten minderen
+	 	aantalBeurtenResterend--;
+
+	 	//De kleinste afstand opslaan. (om de score te berekenen)
+	 	if(shortestDistance > distance /*&& gameState == 1*/)//Als de kortste afstand, groter is dan de afstand op het moment dat er geklikt wordt.
+	 	{
+	 		println("Geklikt, afstand: "+distance);
+	 		shortestDistance = distance; //De nieuwe kortste afstand wordt opgeslagen.
+	 	}
+	 }
+}
+
+//Wordt aangeroepen als je als solo speler klaar bent met spelen
+public void soloGameEnd()
+{
+	//Gamestate veranderen naar wachtscherm
+	gameState = 5;
+
+	//Als je een highscore blad wil maken, zou je dat hier ook kunnen opslaan, voor een solo speler.
+}
+
+
+public void resetMap(){
+	lstMarkers.clear();
+	setupMyMap();
+	
+	//booleans terug naar beginwaarde zetten
+	isResetCompleted = true;
+	isEndMapFinished = false;
+	isFirstLoop = true;
+	isFirstLoop2 = true;
+	isServerOpDeHoogte = false;
+	isWinner = false;
+}
+
+/*-----------------------------------------------EINDE OVERIG-----------------------------------------------*/
 //deze klasse is nodig omdat we per click een SimplePointMarker
 //en een label (bv. landnaam) willen bijhouden
 class MarkerInfo{
