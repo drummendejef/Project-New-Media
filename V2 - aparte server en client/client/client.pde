@@ -66,7 +66,7 @@ PVector handPos;
 //---------HUE------------------//
 String KEY = "fredericgryspeerdt"; // "secret" key/token
 String IP = "172.23.190.22"; // ip bridge
-String LIGHT = "1";
+String LIGHT = "1";//Welke lamp gebruik je?
 
 int hue = 0;	//rood = 0 of 65280 / groen = 25500 tot 36210 / blauw = 46920
 int brightness = 0;	//van 0 tot 255
@@ -186,7 +186,7 @@ void setup() {
 
 	//Afbeeldingen inladen
 	//speluitlegImage = loadImage("./Afbeeldingen/New_Media_EindProject_Speluitleg.jpg");
-	speluitlegImage = loadImage("speluitleg.jpg");
+	speluitlegImage = loadImage("speluitleg.png");
 	achtergrondHome = loadImage("achtergrond_home.PNG");
 
 	//Zorgen dat de coordinaten van waar we beginnen het center van de foto zijn.
@@ -312,7 +312,7 @@ void draw() {
 			    //aantal resterende beurten afdrukken.
 			    fill(#776F5F);
 			    rect(195, 10, 160, 30);
-			    rect(495, 10, 200, 30);
+			    rect(495, 10, 300, 30);
 			    fill(#FFFFFF);
 			    text("Resterende beurten: " + aantalBeurtenResterend, 200, 30);
 			    text("Te zoeken land: " + teZoekenLand, 500, 30);
@@ -415,7 +415,19 @@ void draw() {
 
 		break;
 
-		default :
+		case 6: //Spelregels
+
+				image(speluitlegImage, 0,0);
+
+		break;
+
+		default : //Als er een foute waarde in de gameState gestoken wordt, komt hij hier terecht.
+				background(0, 0, 255);
+				fill(255);
+				textAlign(CENTER);
+				text("Er is ergens iets fout gelopen.", width/2, height/2);
+
+				println("ERROR: In default gameState terecht gekomen.");
 			
 		break;	
 	}
@@ -762,7 +774,8 @@ public void makeStartButtons(){
 	cp5.addButton("spelregelButton", 1, width/2 + 250, height/2 + 90,  250,40)
 		.setCaptionLabel("spelregels")
 		.getCaptionLabel().align(CENTER,CENTER);//Button om het spelregelscherm te weergeven.
-	cp5.addButton("homeButton", 1, 10,10,60,30); //Button om terug naar startscherm te gaan aanmaken
+	cp5.addButton("homeButton", 1, 10,10,110,30)
+		.getCaptionLabel().align(CENTER,CENTER); //Button om terug naar startscherm te gaan aanmaken
 	hideGoHomeButton();
 }
 
@@ -813,10 +826,8 @@ public void spelregelButton() {
 	hideStartButtons();//Controls van het eerste scherm verwijderen.
 	showGoHomeButton();
 	
-        
-
 	//Veranderen naar spelregelpagina
-	//gameState = 6;
+	gameState = 6;
 }
 
 //Opvangen GoHome button (ga terug naar startscherm)
