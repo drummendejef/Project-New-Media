@@ -288,12 +288,13 @@ void draw() {
 			    //OPGEPAST: - mouseX, mouseY moet nog aangepast worden naar handpositie
 			    //			- veranderKleurHue() uit commentaar halen
 			    try {
-			    	cursorLoc = myMap.getLocation(mouseX, mouseY);
+			    	//cursorLoc = myMap.getLocation(mouseX, mouseY);
+			    	cursorLoc = myMap.getLocation(handPos.x, handPos.y);
 			    	distance = (int)searchLoc.getDistance(cursorLoc);
 			    	//println(">> DISTANCE: " + distance);
 
 			    	stelHueWaardenIn();
-			    	//veranderKleurHue();
+			    	veranderKleurHue();
 
 			    } catch (Exception e) {
 			    	println(">> DISTANCE: " + e);
@@ -457,7 +458,7 @@ public void veranderKleurHue(){
     String data = "{\"on\":true, \"hue\":"+hue+", \"bri\":"+brightness+", \"sat\":"+saturation+", \"transitiontime\":5}";
 
     StringEntity se = new StringEntity(data);
-    HttpPut httpPut = new HttpPut("http://"+IP+"/api/"+KEY+"/lights/3/state");
+    HttpPut httpPut = new HttpPut("http://"+IP+"/api/"+KEY+"/lights/4/state");
 
     httpPut.setEntity(se);
 
@@ -723,7 +724,8 @@ public void makeStartButtons(){
 	cp5.addButton("spelregelButton", 1, width/2 + 250, height/2 + 90,  250,40)
 		.setCaptionLabel("spelregels")
 		.getCaptionLabel().align(CENTER,CENTER);//Button om het spelregelscherm te weergeven.
-	cp5.addButton("homeButton", 1, 10,10,60,30); //Button om terug naar startscherm te gaan aanmaken
+	cp5.addButton("homeButton", 1, 10,10,110,30)
+		.getCaptionLabel().align(CENTER,CENTER); //Button om terug naar startscherm te gaan aanmaken
 	hideGoHomeButton();
 }
 
@@ -777,7 +779,7 @@ public void spelregelButton() {
         
 
 	//Veranderen naar spelregelpagina
-	//gameState = 6;
+	gameState = 6;
 }
 
 //Opvangen GoHome button (ga terug naar startscherm)
