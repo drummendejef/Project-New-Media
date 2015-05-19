@@ -183,7 +183,7 @@ void setup() {
 
 	//Afbeeldingen inladen
 	//speluitlegImage = loadImage("./Afbeeldingen/New_Media_EindProject_Speluitleg.jpg");
-	speluitlegImage = loadImage("speluitleg.jpg");
+	speluitlegImage = loadImage("speluitleg.png");
 	achtergrondHome = loadImage("achtergrond_home.PNG");
 
 	//Zorgen dat de coordinaten van waar we beginnen het center van de foto zijn.
@@ -408,7 +408,22 @@ void draw() {
 
 		break;
 
-		default :
+		case 6: //Spelregels
+				background(255, 0, 255);
+				//imageMode(CENTER);
+
+				image(speluitlegImage, 0,0);
+
+
+		break;
+
+		default : //Als er een foute waarde in de gameState gestoken wordt, komt hij hier terecht.
+				background(0, 0, 255);
+				fill(255);
+				textAlign(CENTER);
+				text("Er is ergens iets fout gelopen.", width/2, height/2);
+
+				println("ERROR: In default gameState terecht gekomen.");
 			
 		break;	
 	}
