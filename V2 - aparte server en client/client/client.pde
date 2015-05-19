@@ -41,6 +41,8 @@ DefaultHttpClient httpClient;
 //-----------------KAART-------------------------------------------//
 //create a reference to a "Map" object
 UnfoldingMap myMap;
+Location boundTopLeft;
+Location boundBottomRight;
 
 //telkens er geklikt wordt, moet een marker opgeslagen worden
 ArrayList<MarkerInfo> lstMarkers = new ArrayList();
@@ -64,6 +66,7 @@ PVector handPos;
 //---------HUE------------------//
 String KEY = "fredericgryspeerdt"; // "secret" key/token
 String IP = "172.23.190.22"; // ip bridge
+String LIGHT = "1";
 
 int hue = 0;	//rood = 0 of 65280 / groen = 25500 tot 36210 / blauw = 46920
 int brightness = 0;	//van 0 tot 255
@@ -248,6 +251,9 @@ void draw() {
 		break;
 
 		case 3: //aftelscherm is gedaan --> spel mag starten
+				background(0);
+				checkBoundingBox();
+				
 				try {
 					myMap.draw();
 				} catch (Exception e) {
@@ -288,12 +294,14 @@ void draw() {
 			    //OPGEPAST: - mouseX, mouseY moet nog aangepast worden naar handpositie
 			    //			- veranderKleurHue() uit commentaar halen
 			    try {
-			    	cursorLoc = myMap.getLocation(mouseX, mouseY);
+			    	//cursorLoc = myMap.getLocation(mouseX, mouseY);  //---> uit commentaar halen voor muis input
+			    	cursorLoc = myMap.getLocation(handPos.x, handPos.y);  //----> uit commentaar halen voor leap motion input
+
 			    	distance = (int)searchLoc.getDistance(cursorLoc);
 			    	//println(">> DISTANCE: " + distance);
 
 			    	stelHueWaardenIn();
-			    	//veranderKleurHue();
+			    	veranderKleurHue();
 
 			    } catch (Exception e) {
 			    	println(">> DISTANCE: " + e);
@@ -428,12 +436,18 @@ public void setupMyMap(){
 	
   	centerPos = new ScreenPosition(width/2,height/2);
   	centerLoc = myMap.getLocation(centerPos);
-  	myMap.zoomAndPanTo(centerLoc,2);
+  	//myMap.zoomAndPanTo(centerLoc,2);
   	//myMap.setPanningRestriction(centerLoc, 10000);
   	//myMap.setScaleRange(1f, 18f);
 
-  	myMap.setZoomRange(2,18);		//2 = max uitzoomlevel; 18 = max. inzoomlevel
-  									//range: 0 is max. uitgezoomd, 18 (of meer indien mogelijk) is max. uitgezoomd						
+  	//myMap.setZoomRange(2,18);		//2 = max uitzoomlevel; 18 = max. inzoomlevel
+  									//range: 0 is max. uitgezoomd, 18 (of meer indien mogelijk) is max. uitgezoomd		
+
+  	myMap.zoomAndPanTo(centerLoc, 2);
+  	myMap.setZoomRange(2,18);
+
+  	boundTopLeft = myMap.getTopLeftBorder();
+  	boundBottomRight = myMap.getBottomRightBorder();				
 }
 
 public void setupGeoNamesWebService(){
@@ -457,7 +471,7 @@ public void veranderKleurHue(){
     String data = "{\"on\":true, \"hue\":"+hue+", \"bri\":"+brightness+", \"sat\":"+saturation+", \"transitiontime\":5}";
 
     StringEntity se = new StringEntity(data);
-    HttpPut httpPut = new HttpPut("http://"+IP+"/api/"+KEY+"/lights/3/state");
+    HttpPut httpPut = new HttpPut("http://"+IP+"/api/"+KEY+"/lights/"+ LIGHT + "/state");			//nummer licht aanpassen!
 
     httpPut.setEntity(se);
 
@@ -633,6 +647,31 @@ void addMarkers(ArrayList<MarkerInfo> lst){
 	} catch (Exception e) {
 		println("> addMarker: "+e);
 	}	
+}
+
+public void checkBoundingBox() {
+
+  Location mapTopLeft = myMap.getTopLeftBorder();
+
+  Location mapBottomRight = myMap.getBottomRightBorder();
+
+  ScreenPosition mapTopLeftPos = myMap.getScreenPosition(mapTopLeft);
+  ScreenPosition boundTopLeftPos = myMap.getScreenPosition(boundTopLeft);
+
+  if (boundTopLeft.getLon() > mapTopLeft.getLon()) {
+    myMap.panBy(mapTopLeftPos.x - boundTopLeftPos.x, 0);
+  }
+  if (boundTopLeft.getLat() < mapTopLeft.getLat()) {
+    myMap.panBy(0, mapTopLeftPos.y - boundTopLeftPos.y);
+  }
+  ScreenPosition mapBottomRightPos = myMap.getScreenPosition(mapBottomRight);
+  ScreenPosition boundBottomRightPos = myMap.getScreenPosition(boundBottomRight);
+  if (boundBottomRight.getLon() < mapBottomRight.getLon()) {
+    myMap.panBy(mapBottomRightPos.x - boundBottomRightPos.x, 0);
+  }
+  if (boundBottomRight.getLat() > mapBottomRight.getLat()) {
+    myMap.panBy(0, mapBottomRightPos.y - boundBottomRightPos.y);
+  }
 }
 /*-----------------------------------------------EINDE KAART-----------------------------------------------*/
 
